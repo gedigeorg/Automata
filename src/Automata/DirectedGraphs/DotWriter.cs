@@ -265,46 +265,85 @@ namespace Microsoft.Automata.DirectedGraphs
 
 
 
-
-            tw.WriteLine("digraph \"" + faName + "\" {");
-            tw.WriteLine(string.Format("rankdir={0}; fontsize={1};", rankdir.ToString(), fontsize));
-            tw.WriteLine();
-            tw.WriteLine("//Initial state");
-            tw.WriteLine(string.Format("preInit [style = filled, shape = plaintext, color = {1}, fillcolor = white, label = \"{0}\"]", (showName ? faName + ": " : " "), (showName ? "black" : "white")));
-            tw.WriteLine("//Final states");
+            Console.WriteLine("digraph \"" + faName + "\" {");
+            Console.WriteLine(string.Format("rankdir={0}; fontsize={1};", rankdir.ToString(), fontsize));
+            Console.WriteLine();
+            Console.WriteLine("//Initial state");
+            Console.WriteLine(string.Format("preInit [style = filled, shape = plaintext, color = {1}, fillcolor = white, label = \"{0}\"]", (showName ? faName + ": " : " "), (showName ? "black" : "white")));
+            Console.WriteLine("//Final states");
             foreach (int state in fa.GetStates())
             {
                 if (fa.IsFinalState(state) && !finalLabels.ContainsKey(state))
-                    tw.WriteLine(string.Format("{1} [style = filled, shape = circle, fillcolor = white, fontsize = {0}, peripheries=2]", fontsize, state));
+                    Console.WriteLine(string.Format("{1} [style = filled, shape = circle, fillcolor = white, fontsize = {0}, peripheries=2]", fontsize, state));
                 if (fa.IsFinalState(state) && finalLabels.ContainsKey(state))
                 {
-                    tw.WriteLine(string.Format("{1} [style = filled, shape = circle, fillcolor = white, fontsize = {0}]", fontsize, state));
-                    tw.WriteLine(string.Format("f{0} [style = filled, shape = box, fillcolor = white, label=\"\", peripheries=2]", state));
+                    Console.WriteLine(string.Format("{1} [style = filled, shape = circle, fillcolor = white, fontsize = {0}]", fontsize, state));
+                    Console.WriteLine(string.Format("f{0} [style = filled, shape = box, fillcolor = white, label=\"\", peripheries=2]", state));
                 }
             }
-            tw.WriteLine();
-            tw.WriteLine("//Other states");
+            Console.WriteLine();
+            Console.WriteLine("//Other states");
             foreach (int state in fa.GetStates())
                 if (!fa.IsFinalState(state))
-                    tw.WriteLine(string.Format("{1} [style = filled, shape = circle, fillcolor = white, fontsize = {0}]", fontsize, state));
-            tw.WriteLine();
-            tw.WriteLine("//Transitions");
-            tw.WriteLine(string.Format("preInit -> {0}", fa.InitialState));
+                    Console.WriteLine(string.Format("{1} [style = filled, shape = circle, fillcolor = white, fontsize = {0}]", fontsize, state));
+            Console.WriteLine();
+            Console.WriteLine("//Transitions");
+            Console.WriteLine(string.Format("preInit -> {0}", fa.InitialState));
             foreach (Move<S> t in fa.GetMoves())
             {
                 if (!isfinal(t.Label))
                 {
-                    tw.WriteLine(string.Format("{0} -> {1} [label = \"{2}\"{3}, fontsize = {4} ];", t.SourceState, t.TargetState,
+                    Console.WriteLine(string.Format("{0} -> {1} [label = \"{2}\"{3}, fontsize = {4} ];", t.SourceState, t.TargetState,
                         t.IsEpsilon ? "()" : descr(t.Label).Replace(@"\n", @"\x0A"),
                         t.IsEpsilon ? "" : "", fontsize));
                 }
                 else if (finalLabels.ContainsKey(t.SourceState))
                 {
-                    tw.WriteLine(string.Format("{0} -> {1} [label = \"{2}\", fontsize = {3} ];", t.SourceState, "f"+t.TargetState,
+                    Console.WriteLine(string.Format("{0} -> {1} [label = \"{2}\", fontsize = {3} ];", t.SourceState, "f" + t.TargetState,
                  finalLabels[t.SourceState].Replace(@"\n", @"\x0A"), fontsize));
                 }
             }
-            tw.WriteLine("}");
+            Console.WriteLine("}");
+
+            //tw.WriteLine("digraph \"" + faName + "\" {");
+            //tw.WriteLine(string.Format("rankdir={0}; fontsize={1};", rankdir.ToString(), fontsize));
+            //tw.WriteLine();
+            //tw.WriteLine("//Initial state");
+            //tw.WriteLine(string.Format("preInit [style = filled, shape = plaintext, color = {1}, fillcolor = white, label = \"{0}\"]", (showName ? faName + ": " : " "), (showName ? "black" : "white")));
+            //tw.WriteLine("//Final states");
+            //foreach (int state in fa.GetStates())
+            //{
+            //    if (fa.IsFinalState(state) && !finalLabels.ContainsKey(state))
+            //        tw.WriteLine(string.Format("{1} [style = filled, shape = circle, fillcolor = white, fontsize = {0}, peripheries=2]", fontsize, state));
+            //    if (fa.IsFinalState(state) && finalLabels.ContainsKey(state))
+            //    {
+            //        tw.WriteLine(string.Format("{1} [style = filled, shape = circle, fillcolor = white, fontsize = {0}]", fontsize, state));
+            //        tw.WriteLine(string.Format("f{0} [style = filled, shape = box, fillcolor = white, label=\"\", peripheries=2]", state));
+            //    }
+            //}
+            //tw.WriteLine();
+            //tw.WriteLine("//Other states");
+            //foreach (int state in fa.GetStates())
+            //    if (!fa.IsFinalState(state))
+            //        tw.WriteLine(string.Format("{1} [style = filled, shape = circle, fillcolor = white, fontsize = {0}]", fontsize, state));
+            //tw.WriteLine();
+            //tw.WriteLine("//Transitions");
+            //tw.WriteLine(string.Format("preInit -> {0}", fa.InitialState));
+            //foreach (Move<S> t in fa.GetMoves())
+            //{
+            //    if (!isfinal(t.Label))
+            //    {
+            //        tw.WriteLine(string.Format("{0} -> {1} [label = \"{2}\"{3}, fontsize = {4} ];", t.SourceState, t.TargetState,
+            //            t.IsEpsilon ? "()" : descr(t.Label).Replace(@"\n", @"\x0A"),
+            //            t.IsEpsilon ? "" : "", fontsize));
+            //    }
+            //    else if (finalLabels.ContainsKey(t.SourceState))
+            //    {
+            //        tw.WriteLine(string.Format("{0} -> {1} [label = \"{2}\", fontsize = {3} ];", t.SourceState, "f"+t.TargetState,
+            //     finalLabels[t.SourceState].Replace(@"\n", @"\x0A"), fontsize));
+            //    }
+            //}
+            //tw.WriteLine("}");
         }
 
         ///// <summary>

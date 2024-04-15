@@ -5,7 +5,9 @@ using Microsoft.Automata;
 using Microsoft.Automata.Utilities;
 using Microsoft.Automata.BooleanAlgebras;
 using System.IO;
+using System.Linq;
 using System.Runtime.Serialization;
+using QUT.Gppg;
 
 namespace Microsoft.Automata
 {
@@ -5083,6 +5085,513 @@ namespace Microsoft.Automata
             yield break;
         }
 
+
+
+
+        // automata
+        // naabruslist, saad ainult state int-ga teha
+        // kirjutab algo 1?
+
+        // proovi algo 1 ja 2
+        // imlement nagu ta on
+        // mitu lõppolekut
+
+        // millised featureid toetab? raamtus on kirjas
+        // 
+
+
+        //AutomatonToDot 
+
+        private Dictionary<int, List<int>> neighbors = new Dictionary<int, List<int>>();
+        private Dictionary<int, List<int>> shortestPathsFrom0 = new Dictionary<int, List<int>>();
+        private Dictionary<int, List<List<int>>> shortestPathsToFinalStates = new Dictionary<int, List<List<int>>>();
+
+        // Method to initialize the initial state
+        public void InitializeInitialState(int initialStateValue)
+        {
+            if (!neighbors.ContainsKey(initialStateValue))
+            {
+                neighbors[initialStateValue] = new List<int>();
+                shortestPathsFrom0[initialStateValue] = new List<int> { initialStateValue };
+            }
+        }
+
+        // Method to add final states
+        public void AddFinalState(int finalStateValue)
+        {
+            if (!neighbors.ContainsKey(finalStateValue))
+            {
+                neighbors[finalStateValue] = new List<int>();
+                shortestPathsToFinalStates[finalStateValue] = new List<List<int>>();
+            }
+        }
+
+        // Method to add a connection between states
+        public void AddConnection(int stateValue, int nextStateValue)
+        {
+            if (!neighbors.ContainsKey(stateValue))
+            {
+                neighbors[stateValue] = new List<int>();
+            }
+            neighbors[stateValue].Add(nextStateValue);
+        }
+
+        // Method to compute shortest paths for all states
+        public IEnumerable<IEnumerable<T>> ComputeShortestPaths()
+        {
+            InitializeInitialState(initialState);
+
+            foreach (var finalState in finalStateSet)
+            {
+                AddFinalState(finalState);
+            }
+
+            foreach (var current in delta)
+            {
+                foreach (var move in current.Value)
+                {
+                    AddConnection(move.SourceState, move.TargetState);
+                }
+            }
+
+            ComputeShortestPathsFrom0();
+            ComputeShortestPathsToFinal();
+            var paths = GeneratePaths();
+            List<List<T>> allPaths = new List<List<T>>();
+
+            foreach (var path in paths)
+            {
+                List<T> currentPath = new List<T>();
+                for (int i = 0; i < path.Count; i++)
+                {
+                    var currState = path[i];
+                    if (delta.ContainsKey(currState))
+                    {
+                        foreach (var move in delta[currState])
+                        {
+                            var t = i + 1;
+                            if (t < path.Count && move.TargetState == path[t])
+                            {
+                                currentPath.Add(move.Label);
+                            }
+                        }
+                    }
+                }
+                allPaths.Add(new List<T>(currentPath));
+            }
+
+            return allPaths;
+        }
+
+        // Method to compute shortest paths from initial state
+        private void ComputeShortestPathsFrom0()
+        {
+            Queue<int> queue = new Queue<int>();
+            queue.Enqueue(0);
+
+            while (queue.Count > 0)
+            {
+                int curState = queue.Dequeue();
+                foreach (var nextState in neighbors[curState])
+                {
+                    if (!shortestPathsFrom0.ContainsKey(nextState))
+                    {
+                        shortestPathsFrom0[nextState] = new List<int>(shortestPathsFrom0[curState]);
+                        shortestPathsFrom0[nextState].Add(nextState);
+                        queue.Enqueue(nextState);
+                    }
+                }
+            }
+        }
+
+        //Method to compute shortest paths to final states
+        private void ComputeShortestPathsToFinal()
+        {
+            // Initialize the shortestPathsToFinalStates dictionary
+            //foreach (var state in delta.Keys)
+            //{
+            //    shortestPathsToFinalStates[state] = new List<List<int>>();
+            //}
+
+            // Perform breadth-first search (BFS) starting from each final state
+            if (FinalState == 0) return;
+
+            foreach (var finalState in finalStateSet)
+            {
+                Queue<int> queue = new Queue<int>();
+                queue.Enqueue(finalState);
+
+                // Initialize the shortest path for the final state
+                shortestPathsToFinalStates[finalState].Add(new List<int> { finalState });
+
+                while (queue.Count > 0)
+                {
+                    int curState = queue.Dequeue();
+                    foreach (var preState in neighbors.Keys)
+                    {
+                        if (neighbors[preState].Contains(curState))
+                        {
+                            // If the preState does not have a shortest path yet or the new path is shorter
+                            if (!shortestPathsToFinalStates.ContainsKey(preState) || shortestPathsToFinalStates[preState][0].Count > shortestPathsToFinalStates[curState][0].Count + 1)
+                            {
+                                // Check if the key exists, if not, add it to the dictionary
+                                if (!shortestPathsToFinalStates.ContainsKey(preState))
+                                {
+                                    shortestPathsToFinalStates[preState] = new List<List<int>>();
+                                }
+
+                                shortestPathsToFinalStates[preState].Clear();
+                                foreach (var path in shortestPathsToFinalStates[curState])
+                                {
+                                    List<int> newPath = new List<int>(path);
+                                    newPath.Insert(0, preState);
+                                    shortestPathsToFinalStates[preState].Add(newPath);
+                                }
+                                queue.Enqueue(preState);
+                            }
+
+                            // If the new path is of the same length as the shortest path found so far
+                            else if (shortestPathsToFinalStates[preState][0].Count == shortestPathsToFinalStates[curState][0].Count + 1)
+                            {
+                                foreach (var path in shortestPathsToFinalStates[curState])
+                                {
+                                    List<int> newPath = new List<int>(path);
+                                    newPath.Insert(0, preState);
+                                    shortestPathsToFinalStates[preState].Add(newPath);
+                                }
+                                queue.Enqueue(preState);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+
+        // algo 2
+        // edgePairs teise muutujasse, et saaks eemaldada
+
+
+        // Method to generate all possible edge pairs
+        // täiendada!!!
+        public List<(int startState, int middleState, int endState)> GetAllEdgePairs()
+        {
+            List<(int, int, int)> edgePairs = new List<(int, int, int)>();
+
+            foreach (var sourceState in neighbors.Keys)
+            {
+                foreach (var targetState1 in neighbors[sourceState])
+                {
+                    foreach (var targetState2 in neighbors[targetState1])
+                    {
+                        edgePairs.Add((sourceState, targetState1, targetState2));
+                    }
+                }
+            }
+
+            return edgePairs;
+        }
+
+        public List<List<int>> GeneratePaths()
+        {
+            // Step 1: Compute shortest paths
+            //ComputeShortestPaths();
+
+            // Step 3: Get all edge pairs
+            var edgePairPool = GetAllEdgePairs();
+
+            List<List<int>> paths = new List<List<int>>();
+
+            Random rand = new Random();
+
+            while (edgePairPool.Count > 0)
+            {
+                // Step 6: Get a random edge pair
+                (int, int, int) edgePair = edgePairPool[rand.Next(edgePairPool.Count)];
+
+                int start = edgePair.Item1;
+                int middle = edgePair.Item2;
+                int end = edgePair.Item3;
+
+                // Step 10: Create path
+                var path = new List<int>();
+                path.AddRange(shortestPathsFrom0[start]);
+                path.Add(middle);
+                path.AddRange(shortestPathsToFinalStates[end][0]);
+
+
+                if (!paths.Any(p => p.SequenceEqual(path)))
+                {
+                    paths.Add(path);
+                }
+
+                //shortestPathsFrom0[start][0] + "." + middle.ToString() + "." + shortestPathsToFinalStates[end][0];
+
+                //// Step 11: Convert path to stringInput
+                //string stringInput = ConvertToString(path);
+
+                //// Step 12: Add stringInput to stringList
+                //stringList.Add(stringInput);
+
+                //// Step 13: Do matching
+                //dynamic dynamicProg = DoMatching(stringInput);
+
+                // Step 14: Remove covered edge pairs from edgePairPool
+                //edgePairPool.RemoveAll(edge => dynamicProg.Covers(edge));
+                edgePairPool.Remove(edgePair);
+
+                // Repeat until edgePairPool is empty
+            }
+
+            // Step 15: Return stringList
+            return paths;
+        }
+
+        // Method to generate all possible string configurations
+        //public IEnumerable<IEnumerable<T>> FindAllConfigs(int repetitions)
+        //{
+        //    List<List<T>> allPaths = new List<List<T>>();
+
+        //    var paths = GenerateConfigPaths();
+
+        //    for (int i = 0; i < paths.Count; i++)
+        //    {
+        //        for (int j = 0; j < paths[i].Count; j++)
+        //        {
+        //            List<T> currentPath = new List<T>();
+        //            int next = j;
+        //            int currState = paths[i][j];
+        //            int nextState = paths[i][next++];
+        //            if (delta.ContainsKey(currState))
+        //            {
+        //                foreach (var move in delta[currState])
+        //                {
+        //                    if (move.SourceState == currState && move.TargetState == nextState)
+        //                    {
+        //                        currentPath.Add(move.Label);
+        //                    }
+        //                }
+        //            }
+        //            //allPaths.Add(currentPath);
+        //            allPaths.Add(new List<T>(currentPath));
+        //        }
+        //    }
+
+        //    return allPaths;
+        //}
+
+        // Method to generate test strings using EdgePairPool algorithm
+        //public List<List<int>> GenerateConfigPaths()
+        //{
+        //    ComputeShortestPaths();
+
+        //    // Assuming prog.getAllEdgePairs() returns a list of edge pairs
+        //    var edgePairPool = GetAllEdgePairs();
+        //    List<List<int>> paths = new List<List<int>>();
+
+        //    while (edgePairPool.Count > 0)
+        //    {
+        //        var edgePair = edgePairPool.GetRange(0, 1)[0];
+
+        //        List<int> path = new List<int>();
+
+        //        path.AddRange(shortestPathsFrom0[edgePair.startState]);
+        //        path.Add(edgePair.middleState);
+        //        path.AddRange(shortestPathsToFinalStates[edgePair.endState][0]);
+
+        //        paths.Add(path);
+
+        //        // Remove covered edge pairs from edgePairPool
+        //        edgePairPool.Remove(edgePair);
+        //    }
+
+        //    return paths;
+        //}
+
+
+
+
+
+
+
+
+        public IEnumerable<IEnumerable<T>> FindAllPaths(int repetitions)
+        {
+            if (delta == null || delta.Count == 0)
+                throw new AutomataException(AutomataExceptionKind.AutomatonMustBeNonempty);
+
+            List<List<T>> allPaths = new List<List<T>>();
+            Dictionary<int, int> visited = new Dictionary<int, int>();
+            bool initialStateIsFinalState = finalStateSet.Contains(initialState);
+
+            Dfs(initialState, new List<T>(), visited, allPaths, initialStateIsFinalState, repetitions);
+
+            return allPaths;
+        }
+
+        private void Dfs(int currentState, List<T> currentPath, Dictionary<int, int> visited, List<List<T>> allPaths, bool initialStateIsFinalState, int repetitions)
+        {
+            if (!IsFinalState(currentState) && OutDegree(currentState) == 0)
+                throw new AutomataException(AutomataExceptionKind.AutomatonMustNotContainDeadStates);
+
+            try
+            {
+                visited.Add(currentState, 1);
+            }
+            catch (Exception e)
+            {
+                if (e is ArgumentException)
+                {
+                    visited[currentState] += 1;
+                }
+                else
+                {
+                    Console.WriteLine(e);
+                    throw;
+                }
+            }
+            
+            // Check if currentState is a final state and add currentPath to allPaths if it is
+            if (finalStateSet.Contains(currentState) || (initialStateIsFinalState && visited[currentState] > repetitions))
+            {
+                allPaths.Add(new List<T>(currentPath));
+            }
+
+            // Iterate over all moves from currentState
+            if (delta.ContainsKey(currentState))
+            {
+                foreach (var move in delta[currentState])
+                {
+                    if (!visited.ContainsKey(move.TargetState) || (move.IsSelfLoop && visited[currentState] <= repetitions) || (visited[currentState] <= repetitions && initialStateIsFinalState))
+                    {
+                        // Add move label to currentPath
+                        currentPath.Add(move.Label);
+
+                        // Recursively explore next state
+                        Dfs(move.TargetState, currentPath, visited, allPaths, initialStateIsFinalState, repetitions);
+
+                        // Backtrack: remove last label from currentPath
+                        currentPath.RemoveAt(currentPath.Count - 1);
+                    }
+                }
+            }
+
+            // Remove currentState from visited set after exploring all moves
+            visited.Remove(currentState);
+        }
+
+
+        // test 03.04.24
+        //public void ComputeShortestPaths(State2 state)
+        //{
+        //    var state0 = initialState;
+        //    state0.PathFrom0 = "0";
+        //    state0.IsVisited = true;
+        //    ComputeSPFrom0(state0);
+
+        //    foreach (var stateF in GetFinalStates())
+        //    {
+        //        stateF.PathFrom0 = stateF.Name;
+        //        stateF.IsVisited = true;
+        //        ComputeSPToF(stateF);
+        //    }
+        //}
+
+        //public void ComputeSPFrom0(BDD state)
+        //{
+        //    Queue<BDD> queue = new Queue<BDD>();
+        //    queue.Enqueue(state);
+
+        //    while (queue.Count > 0)
+        //    {
+        //        BDD curState = queue.Dequeue();
+        //        foreach (var nextState in curState.NextStates)
+        //        {
+        //            if (!nextState.IsVisited)
+        //            {
+        //                nextState.PathFrom0 = curState.PathFrom0 + "." + nextState.Name;
+        //                nextState.IsVisited = true;
+        //                queue.Enqueue(nextState);
+        //            }
+        //        }
+        //    }
+        //}
+
+        //private void ComputeSPToF(BDD state)
+        //{
+        //    Queue<BDD> queue = new Queue<BDD>();
+        //    queue.Enqueue(state);
+
+        //    while (queue.Count > 0)
+        //    {
+        //        BDD curState = queue.Dequeue();
+        //        foreach (var preState in curState.PreStates)
+        //        {
+        //            if (!preState.IsVisited)
+        //            {
+        //                preState.PathToF = preState.Name + "." + curState.PathToF;
+        //                preState.IsVisited = true;
+        //                queue.Enqueue(preState);
+        //            }
+        //        }
+        //    }
+        //}
+
+        //public List<string> GenerateTestStrings(Prog prog)
+        //{
+        //    prog.ComputeShortestPaths();
+        //    prog.ComputeEdgeToByteMap();
+
+        //    List<EdgePair> edgePairPool = prog.GetAllEdgePairs();
+        //    List<string> stringList = new List<string>();
+
+        //    while (edgePairPool.Count > 0)
+        //    {
+        //        EdgePair edgePair = GetRandomEdgePair(edgePairPool);
+        //        State start = edgePair.StartState;
+        //        State middle = edgePair.MiddleState;
+        //        State end = edgePair.EndState;
+        //        string path = start.PathFrom0 + "." + middle.Name + "." + end.PathToF;
+        //        string stringInput = ConvertToString(prog, path);
+        //        stringList.Add(stringInput);
+        //        DynamicProgram dynamicProg = DoMatching(prog, stringInput);
+        //        RemoveCoveredEdgePairs(dynamicProg, edgePairPool);
+        //    }
+
+        //    return stringList;
+        //}
+
+        //private EdgePair GetRandomEdgePair(List<EdgePair> edgePairPool)
+        //{
+        //    Random random = new Random();
+        //    int index = random.Next(0, edgePairPool.Count);
+        //    EdgePair randomEdgePair = edgePairPool[index];
+        //    edgePairPool.RemoveAt(index);
+        //    return randomEdgePair;
+        //}
+
+        //private string ConvertToString(Prog prog, string path)
+        //{
+        //    // Implement your logic to convert DFA path to string using edgeToByteMap
+        //    throw new NotImplementedException();
+        //}
+
+        //private DynamicProgram DoMatching(Prog prog, string stringInput)
+        //{
+        //    // Implement your logic to perform matching and return dynamic program
+        //    throw new NotImplementedException();
+        //}
+
+        //private void RemoveCoveredEdgePairs(DynamicProgram dynamicProg, List<EdgePair> edgePairPool)
+        //{
+        //    // Implement your logic to remove covered edge pairs from edgePairPool
+        //    throw new NotImplementedException();
+        //}
+
+
+
+
+
         #endregion
 
         #region IAutomaton<S> Members
@@ -5560,6 +6069,117 @@ namespace Microsoft.Automata
             }
             return null;
         }
+
+
+        
+
+        public IEnumerable<Tuple<T[], int>> FindAllFinalPaths(int pStart)
+        {
+            if (!this.delta.ContainsKey(pStart))
+                throw new AutomataException(AutomataExceptionKind.AutomatonInvalidState);
+
+            var finalPaths = new List<Tuple<T[], int>>();
+            SimpleStack<int> currentStack = null;
+            var nextStack = new SimpleStack<int>();
+            var path = new Dictionary<int, SimpleList<T>>();
+            nextStack.Push(pStart);
+            path[pStart] = SimpleList<T>.Empty;
+
+            while (nextStack.IsNonempty)
+            {
+                currentStack = nextStack;
+                nextStack = new SimpleStack<int>();
+                while (currentStack.IsNonempty)
+                {
+                    var p = currentStack.Pop();
+                    var p_path = path[p];
+                    foreach (var move in GetMovesFrom(p))
+                    {
+                        var q = move.TargetState;
+                        if (IsFinalState(q))
+                        {
+                            if (move.IsEpsilon)
+                                finalPaths.Add(Tuple.Create(p_path.ToArray(), q));
+                            else
+                                finalPaths.Add(Tuple.Create(p_path.Append(move.Label).ToArray(), q));
+                        }
+                        else if (!path.ContainsKey(q))
+                        {
+                            nextStack.Push(q);
+                            if (move.IsEpsilon)
+                                path[q] = p_path;
+                            else
+                                path[q] = p_path.Append(move.Label);
+                        }
+                    }
+                }
+            }
+
+            return finalPaths;
+        }
+        //public IEnumerable<string> ComputeShortestPaths()
+        //{
+        //    var initialState = GetInitialState();
+        //    initialState.PathFrom0 = "0";
+        //    initialState.Visited = true;
+        //    ComputeShortestPathsFrom0(initialState);
+
+        //    var finalStates = GetFinalStates();
+        //    foreach (var finalState in finalStates)
+        //    {
+        //        finalState.PathToF = finalState.Name;
+        //        finalState.Visited = true;
+        //        ComputeShortestPathsToF(finalState);
+        //    }
+
+        //    return finalStates.Select(finalState => finalState.PathToF);
+        //}
+
+        //private void ComputeShortestPathsFrom0(State state)
+        //{
+        //    var queue = new Queue<State>();
+        //    queue.Enqueue(state);
+
+        //    while (queue.Count > 0)
+        //    {
+        //        var curState = queue.Dequeue();
+
+        //        foreach (var nextState in curState.NextStates)
+        //        {
+        //            if (!nextState.Visited)
+        //            {
+        //                nextState.PathFrom0 = curState.PathFrom0 + "." + nextState.Name;
+        //                nextState.Visited = true;
+        //                queue.Enqueue(nextState);
+        //            }
+        //        }
+        //    }
+        //}
+
+        //private void ComputeShortestPathsToF(State state)
+        //{
+        //    var queue = new Queue<State>();
+        //    queue.Enqueue(state);
+
+        //    while (queue.Count > 0)
+        //    {
+        //        var curState = queue.Dequeue();
+
+        //        foreach (var preState in curState.PreStates)
+        //        {
+        //            if (!preState.Visited)
+        //            {
+        //                preState.PathToF = preState.Name + "." + curState.PathToF;
+        //                preState.Visited = true;
+        //                queue.Enqueue(preState);
+        //            }
+        //        }
+        //    }
+        //}
+
+
+
+
 
         public bool IsState(int q)
         {

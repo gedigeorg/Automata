@@ -1,0 +1,91 @@
+﻿Failed regex, generated string:
+
+1.
+(\d{1,2})\W+(\d{1,2})\W*(\d{2,4})?|(\d{4})\W(\d{1,2})\W(\d{1,2})|([a-zA-Z]+)\W*(\d{1,2})\W+(\d{2,4})|(\d{4})\W*([a-zA-Z]+)\W*(\d{1,2})|(\d{1,2})\W*([a-zA-Z]+)\W*(\d{2,4})|(\d{1,2})\W*([a-zA-Z]+)|([a-zA-Z]+)\W*(\d{1,2})|(\d{2})(\d{2})(\d{2,4})?
+"ꔙ바㓛꘩៨\ua63e\u4db7８"
+
+2.
+\[bible[=]?([a-zäëïöüæø]*)\]((([0-9][[:space:]]?)?[a-zäëïöüæø]*[[:space:]]{1}([a-zäëïöüæø]*[[:space:]]?[a-zäëïöüæø]*[[:space:]]{1})?)([0-9]{1,3})(:{1}([0-9]{1,3})(-{1}([0-9]{1,3}))?)?)\[\\/bible\]
+"覌챶[bible]5[yüv[1[\\/bible]"
+
+3.
+((www|http)(\W+\S+[^).,:;?\]\} \r\n$]+))
+
+4.
+^(([A-Za-z]+[^0-9]*)([0-9]+[^\W]*)([\W]+[\W0-9A-Za-z]*))|(([A-Za-z]+[^\W]*)([\W]+[^0-9]*)([0-9]+[\W0-9A-Za-z]*))|(([\W]+[^A-Za-z]*)([A-Za-z]+[^0-9]*)([0-9]+[\W0-9A-Za-z]*))|(([\W]+[^0-9]*)([0-9]+[^A-Za-z]*)([A-Za-z]+[\W0-9A-Za-z]*))|(([0-9]+[^A-Za-z]*)([A-Za-z]+[^\W]*)([\W]+[\W0-9A-Za-z]*))|(([0-9]+[^\W]*)([\W]+[^A-Za-z]*)([A-Za-z]+[\W0-9A-Za-z]*))$
+"129ﶪ\ufa6f\u9fd9u\u9fe7"
+
+5.
+((v|[\\/])\W*[i1]\W*[a@]\W*g\W*r\W*[a@]|v\W*[i1]\W*[c]\W*[o0]\W*d\W*[i1]\W*n)
+"闪ꋄ뉄䐶珝旝悮㈷vic㈎\u31010\u4db6\u0ff5ᰴ\u3100d\u9fe7i䷮n"
+
+6.
+[v,V,(\\/)](\W|)[i,I,1,l,L](\W|)[a,A,@,(\/\\)](\W|)[g,G](\W|)[r,R](\W|)[a,A,@,(\/\\))]
+")\ud7adi\\\u9ff8,r⠤a"
+
+7.
+^\W{0,5}[Rr]e:\W[a-zA-Z0-9]{1,10},\W[a-z]{1,10}\W[a-z]{1,10}\W[a-z]{1,10}
+"\u03a2\u4db7re:\ud7fcO626,\ufb37xqnu\u4db8y숥ጲ"
+
+8.
+.*[\$Ss]pecia[l1]\W[Oo0]ffer.*
+"膾specia1\u9ff50ffer쑿䜼"
+
+9.
+ (mailto\:|(news|(ht|f)tp(s?))\://)(([^[:space:]]+)|([^[:space:]]+)( #([^#]+)#)?) 
+"㚧 http://ꂐ呢 #ꯇ諉# 遍\udefa"
+
+10.
+&lt;[^&gt;]*name[\s]*=[\s]*&quot;?[^\w_]*&quot;?[^&gt;]*&gt;
+"ﺌᘂꦂ&lt;name　　 = 　&quot\u312e\ua48dꠣ&quot&gt;\ufdde"
+
+
+-------------------------------
+
+1.
+\W+
+"稯◫" passed
+"覒\u9fd6\u4dbb" failed
+but '\W*' passed
+'\wee\w' passed
+'\Wtree\W' failed
+
+2.
+\[bible[=]?([a-zäëïöüæø]*)\]((([0-9][[:space:]]?)?[a-zäëïöüæø]*[[:space:]]{1}([a-zäëïöüæø]*[[:space:]]?[a-zäëïöüæø]*[[:space:]]{1})?)([0-9]{1,3})(:{1}([0-9]{1,3})(-{1}([0-9]{1,3}))?)?)\[\\/bible\]
+"ꤿ뻂毌[bibled]øzëü[8:8[\\/bible]湤ヱ"
+failed but should have syntax error 'Unexpected token: "\]"' ???
+
+3.
+((www|http)(\W+\S+[^).,:;?\]\} \r\n$]+))
+"檚www\u4db8ⳍ≑栆" failed
+"http䷒䷶\uabfaꢾ빏ڦ苟", "http䷢ퟥ䔎柡", "www䷍꯬⦭먲䶧", "֕www꓁䷫듃䕀", "⊗\ude02뒔httpਃ鈲ᐓ쵌ସ" passed
+"www\u4dbb殨퀘羵" failed
+
+4.
+[\W] failed
+
+5.
+failing component:
+v\W*[i1]
+v\W*[1i]
+
+6. ?
+single components didn't failed
+
+7.
+failing component:
+^\W{0,5}[Rr]e:\W
+
+8.
+
+9.
+shuld pass with this (withput '//') but don't
+ (mailto\:|(news|(ht|f)tp(s?))\:)(([^[:space:]]+)|([^[:space:]]+)( #([^#]+)#)?) 
+
+10.
+passes separately, whole regex doesn't (only sometimes):
+&lt;[^&gt;]*
+name[\s]*=[\s]*
+&quot;?
+[^\w_]*&quot;?
+[^&gt;]*&gt;

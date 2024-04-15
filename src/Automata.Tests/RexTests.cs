@@ -122,7 +122,7 @@ namespace Automata.Tests
             int k = (regexes.Length < 400 ? regexes.Length : 400);
 
             int rxCount = 10; //number of strings to be generated for each regex
-            for (int i = 1; i < k; i++)
+            for (int i = 0; i < k; i++)
                 foreach (string s in rex.GenerateMembers(RegexOptions.None, rxCount, regexes[i]))
                     if (!exclude.Contains(i))
                         if (!Microsoft.Automata.Rex.RexEngine.IsMatch(s, regexes[i], RegexOptions.None))

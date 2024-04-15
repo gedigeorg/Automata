@@ -1,0 +1,11 @@
+{
+  "profiles": {
+    "Automata": {
+      "commandName": "Project"
+    },
+    "TestAutomataLib": {
+      "commandName": "Executable",
+      "executablePath": "C:\\UNI\\THESIS\\Test-MS-Regex\\bin\\Debug\\net6.0\\Test-MS-Regex.exe"
+    }
+  }
+}
