@@ -5097,31 +5097,29 @@ namespace Microsoft.Automata
         // mitu lõppolekut
 
         // millised featureid toetab? raamtus on kirjas
-        // 
-
-
+        
         //AutomatonToDot 
 
-        private Dictionary<int, List<int>> neighbors = new Dictionary<int, List<int>>();
-        private Dictionary<int, List<int>> shortestPathsFrom0 = new Dictionary<int, List<int>>();
+        private Dictionary<int, List<int>> statesWithNeighbors = new Dictionary<int, List<int>>();
+        private Dictionary<int, List<int>> shortestPathsFromInitialState = new Dictionary<int, List<int>>();
         private Dictionary<int, List<List<int>>> shortestPathsToFinalStates = new Dictionary<int, List<List<int>>>();
 
         // Method to initialize the initial state
         public void InitializeInitialState(int initialStateValue)
         {
-            if (!neighbors.ContainsKey(initialStateValue))
+            if (!statesWithNeighbors.ContainsKey(initialStateValue))
             {
-                neighbors[initialStateValue] = new List<int>();
-                shortestPathsFrom0[initialStateValue] = new List<int> { initialStateValue };
+                statesWithNeighbors[initialStateValue] = new List<int>();
+                shortestPathsFromInitialState[initialStateValue] = new List<int> { initialStateValue };
             }
         }
 
         // Method to add final states
         public void AddFinalState(int finalStateValue)
         {
-            if (!neighbors.ContainsKey(finalStateValue))
+            if (!statesWithNeighbors.ContainsKey(finalStateValue) || finalStateValue == 0)
             {
-                neighbors[finalStateValue] = new List<int>();
+                statesWithNeighbors[finalStateValue] = new List<int>();
                 shortestPathsToFinalStates[finalStateValue] = new List<List<int>>();
             }
         }
@@ -5129,11 +5127,11 @@ namespace Microsoft.Automata
         // Method to add a connection between states
         public void AddConnection(int stateValue, int nextStateValue)
         {
-            if (!neighbors.ContainsKey(stateValue))
+            if (!statesWithNeighbors.ContainsKey(stateValue))
             {
-                neighbors[stateValue] = new List<int>();
+                statesWithNeighbors[stateValue] = new List<int>();
             }
-            neighbors[stateValue].Add(nextStateValue);
+            statesWithNeighbors[stateValue].Add(nextStateValue);
         }
 
         // Method to compute shortest paths for all states
@@ -5187,37 +5185,31 @@ namespace Microsoft.Automata
         private void ComputeShortestPathsFrom0()
         {
             Queue<int> queue = new Queue<int>();
-            queue.Enqueue(0);
+            queue.Enqueue(initialState);
 
             while (queue.Count > 0)
             {
                 int curState = queue.Dequeue();
-                foreach (var nextState in neighbors[curState])
+                foreach (var nextState in statesWithNeighbors[curState])
                 {
-                    if (!shortestPathsFrom0.ContainsKey(nextState))
+                    if (!shortestPathsFromInitialState.ContainsKey(nextState))
                     {
-                        shortestPathsFrom0[nextState] = new List<int>(shortestPathsFrom0[curState]);
-                        shortestPathsFrom0[nextState].Add(nextState);
+                        shortestPathsFromInitialState[nextState] = new List<int>(shortestPathsFromInitialState[curState]);
+                        shortestPathsFromInitialState[nextState].Add(nextState);
                         queue.Enqueue(nextState);
                     }
                 }
             }
         }
 
-        //Method to compute shortest paths to final states
         private void ComputeShortestPathsToFinal()
         {
-            // Initialize the shortestPathsToFinalStates dictionary
-            //foreach (var state in delta.Keys)
-            //{
-            //    shortestPathsToFinalStates[state] = new List<List<int>>();
-            //}
-
             // Perform breadth-first search (BFS) starting from each final state
-            if (FinalState == 0) return;
+            //if (FinalState == 0) return;
 
-            foreach (var finalState in finalStateSet)
+            for (int i = 0; i < finalStateSet.Count; i++)
             {
+                int finalState = finalStateSet.ElementAt(i);
                 Queue<int> queue = new Queue<int>();
                 queue.Enqueue(finalState);
 
@@ -5227,39 +5219,25 @@ namespace Microsoft.Automata
                 while (queue.Count > 0)
                 {
                     int curState = queue.Dequeue();
-                    foreach (var preState in neighbors.Keys)
+                    foreach (var state in statesWithNeighbors.Keys)
                     {
-                        if (neighbors[preState].Contains(curState))
+                        if (statesWithNeighbors[state].Contains(curState))
                         {
-                            // If the preState does not have a shortest path yet or the new path is shorter
-                            if (!shortestPathsToFinalStates.ContainsKey(preState) || shortestPathsToFinalStates[preState][0].Count > shortestPathsToFinalStates[curState][0].Count + 1)
+                            if (!shortestPathsToFinalStates.ContainsKey(state) ||
+                                shortestPathsToFinalStates[state].Count <= i ||
+                                shortestPathsToFinalStates[state][i].Count > shortestPathsToFinalStates[curState][i].Count + 1)
                             {
                                 // Check if the key exists, if not, add it to the dictionary
-                                if (!shortestPathsToFinalStates.ContainsKey(preState))
+                                if (!shortestPathsToFinalStates.ContainsKey(state))
                                 {
-                                    shortestPathsToFinalStates[preState] = new List<List<int>>();
+                                    shortestPathsToFinalStates[state] = new List<List<int>>();
                                 }
 
-                                shortestPathsToFinalStates[preState].Clear();
-                                foreach (var path in shortestPathsToFinalStates[curState])
-                                {
-                                    List<int> newPath = new List<int>(path);
-                                    newPath.Insert(0, preState);
-                                    shortestPathsToFinalStates[preState].Add(newPath);
-                                }
-                                queue.Enqueue(preState);
-                            }
-
-                            // If the new path is of the same length as the shortest path found so far
-                            else if (shortestPathsToFinalStates[preState][0].Count == shortestPathsToFinalStates[curState][0].Count + 1)
-                            {
-                                foreach (var path in shortestPathsToFinalStates[curState])
-                                {
-                                    List<int> newPath = new List<int>(path);
-                                    newPath.Insert(0, preState);
-                                    shortestPathsToFinalStates[preState].Add(newPath);
-                                }
-                                queue.Enqueue(preState);
+                                List<int> newPath = new List<int>();
+                                newPath.Add(state);
+                                newPath.AddRange(shortestPathsToFinalStates[curState][shortestPathsToFinalStates[curState].Count - 1]);
+                                shortestPathsToFinalStates[state].Add(newPath);
+                                queue.Enqueue(state);
                             }
                         }
                     }
@@ -5268,36 +5246,54 @@ namespace Microsoft.Automata
         }
 
 
+
+
         // algo 2
         // edgePairs teise muutujasse, et saaks eemaldada
 
 
         // Method to generate all possible edge pairs
         // täiendada!!!
+        //public List<(int startState, int middleState, int endState)> GetAllEdgePairs()
+        //{
+        //    List<(int, int, int)> edgePairs = new List<(int, int, int)>();
+
+        //    foreach (var sourceState in statesWithNeighbors.Keys)
+        //    {
+        //        foreach (var targetState1 in statesWithNeighbors[sourceState])
+        //        {
+        //            foreach (var targetState2 in statesWithNeighbors[targetState1])
+        //            {
+        //                edgePairs.Add((sourceState, targetState1, targetState2));
+        //            }
+        //        }
+        //    }
+        //    return edgePairs;
+        //}
+
+        // Method to generate all possible edge pairs
         public List<(int startState, int middleState, int endState)> GetAllEdgePairs()
         {
-            List<(int, int, int)> edgePairs = new List<(int, int, int)>();
+            HashSet<(int, int, int)> edgePairs = new HashSet<(int, int, int)>();
 
-            foreach (var sourceState in neighbors.Keys)
+            foreach (var sourceState in statesWithNeighbors.Keys)
             {
-                foreach (var targetState1 in neighbors[sourceState])
+                foreach (var targetState1 in statesWithNeighbors[sourceState])
                 {
-                    foreach (var targetState2 in neighbors[targetState1])
+                    foreach (var targetState2 in statesWithNeighbors[targetState1])
                     {
                         edgePairs.Add((sourceState, targetState1, targetState2));
                     }
                 }
             }
 
-            return edgePairs;
+            // Convert the HashSet to a List and return
+            return edgePairs.ToList();
         }
+
 
         public List<List<int>> GeneratePaths()
         {
-            // Step 1: Compute shortest paths
-            //ComputeShortestPaths();
-
-            // Step 3: Get all edge pairs
             var edgePairPool = GetAllEdgePairs();
 
             List<List<int>> paths = new List<List<int>>();
@@ -5306,108 +5302,30 @@ namespace Microsoft.Automata
 
             while (edgePairPool.Count > 0)
             {
-                // Step 6: Get a random edge pair
                 (int, int, int) edgePair = edgePairPool[rand.Next(edgePairPool.Count)];
 
                 int start = edgePair.Item1;
                 int middle = edgePair.Item2;
                 int end = edgePair.Item3;
 
-                // Step 10: Create path
-                var path = new List<int>();
-                path.AddRange(shortestPathsFrom0[start]);
-                path.Add(middle);
-                path.AddRange(shortestPathsToFinalStates[end][0]);
-
-
-                if (!paths.Any(p => p.SequenceEqual(path)))
+                for (int i = 0; i < shortestPathsToFinalStates[end].Count; i++)
                 {
-                    paths.Add(path);
+                    var path = new List<int>();
+                    path.AddRange(shortestPathsFromInitialState[start]);
+                    path.Add(middle);
+                    path.AddRange(shortestPathsToFinalStates[end][i]);
+
+                    if (!paths.Any(p => p.SequenceEqual(path)))
+                    {
+                        paths.Add(path);
+                    }
                 }
-
-                //shortestPathsFrom0[start][0] + "." + middle.ToString() + "." + shortestPathsToFinalStates[end][0];
-
-                //// Step 11: Convert path to stringInput
-                //string stringInput = ConvertToString(path);
-
-                //// Step 12: Add stringInput to stringList
-                //stringList.Add(stringInput);
-
-                //// Step 13: Do matching
-                //dynamic dynamicProg = DoMatching(stringInput);
-
-                // Step 14: Remove covered edge pairs from edgePairPool
-                //edgePairPool.RemoveAll(edge => dynamicProg.Covers(edge));
                 edgePairPool.Remove(edgePair);
 
-                // Repeat until edgePairPool is empty
             }
 
-            // Step 15: Return stringList
             return paths;
         }
-
-        // Method to generate all possible string configurations
-        //public IEnumerable<IEnumerable<T>> FindAllConfigs(int repetitions)
-        //{
-        //    List<List<T>> allPaths = new List<List<T>>();
-
-        //    var paths = GenerateConfigPaths();
-
-        //    for (int i = 0; i < paths.Count; i++)
-        //    {
-        //        for (int j = 0; j < paths[i].Count; j++)
-        //        {
-        //            List<T> currentPath = new List<T>();
-        //            int next = j;
-        //            int currState = paths[i][j];
-        //            int nextState = paths[i][next++];
-        //            if (delta.ContainsKey(currState))
-        //            {
-        //                foreach (var move in delta[currState])
-        //                {
-        //                    if (move.SourceState == currState && move.TargetState == nextState)
-        //                    {
-        //                        currentPath.Add(move.Label);
-        //                    }
-        //                }
-        //            }
-        //            //allPaths.Add(currentPath);
-        //            allPaths.Add(new List<T>(currentPath));
-        //        }
-        //    }
-
-        //    return allPaths;
-        //}
-
-        // Method to generate test strings using EdgePairPool algorithm
-        //public List<List<int>> GenerateConfigPaths()
-        //{
-        //    ComputeShortestPaths();
-
-        //    // Assuming prog.getAllEdgePairs() returns a list of edge pairs
-        //    var edgePairPool = GetAllEdgePairs();
-        //    List<List<int>> paths = new List<List<int>>();
-
-        //    while (edgePairPool.Count > 0)
-        //    {
-        //        var edgePair = edgePairPool.GetRange(0, 1)[0];
-
-        //        List<int> path = new List<int>();
-
-        //        path.AddRange(shortestPathsFrom0[edgePair.startState]);
-        //        path.Add(edgePair.middleState);
-        //        path.AddRange(shortestPathsToFinalStates[edgePair.endState][0]);
-
-        //        paths.Add(path);
-
-        //        // Remove covered edge pairs from edgePairPool
-        //        edgePairPool.Remove(edgePair);
-        //    }
-
-        //    return paths;
-        //}
-
 
 
 

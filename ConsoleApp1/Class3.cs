@@ -38,10 +38,18 @@ namespace ConsoleApp1
 
                 //"^(a|bc)$"
 
-                "^x(xyz)*z?$"
+                //"^x(xyz)*z?$"
                 //"^x(xyz)*z?$"
                 //"^[a-g]{1,2}x?$"
                 //"^x*$"
+
+                //"^x(xyzt(r)*)*z?$"
+                //"^(ax|bx|bzx)$"
+                
+                //"^a((x*)y*)*$"
+                //"^a((x*)abc(y*))$"
+
+                "^(?=.*[A-Z])(?=.*[a-z])(?=.*\\d)(?=.*[@#$%^&+=])(?!.*\\s).{8,}$"
             };
 
             // match all regexes
@@ -65,13 +73,6 @@ namespace ConsoleApp1
 
             rexEngine.Visualize(options, regexes);
             Console.WriteLine();
-
-            // 1. täiendada algot kõik teekonnad kõikide final stateni, final state isVisited nullida
-            // 2. doci lisa näited regexitest mille peal kaitsetasid, joonistega
-            // 3. genereeri tekste, testi ulatuslikumalt
-            // 4. "*" rohkem testida, "x*", ".*", "x*y*", "((x*)y)*", "((x*)y*)*"
-            // 5. milliseid automaate gen kui on mitu *? pane doci kirja koos graafikuga
-
 
             Console.WriteLine("Test algo 1 & 2:");
             var sample = rexEngine.TestAlgo1(options, 1, 2, regexes);

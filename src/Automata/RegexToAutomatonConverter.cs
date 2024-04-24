@@ -320,7 +320,7 @@ namespace Microsoft.Automata
                 case RegexNode.Prevent:
                     throw new AutomataException("Regex construct not supported: prevent constructs (?!) (?<!)");
                 case RegexNode.Require:
-                    throw new AutomataException("Regex construct not supported: require constructs (?=) (?<=)"); 
+                    throw new AutomataException("Regex construct not supported: require constructs (?=) (?<=)");
                 case RegexNode.Testgroup:
                     throw new AutomataException("Regex construct not supported: test construct (?(...) | )");
                 case RegexNode.Testref:
