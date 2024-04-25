@@ -5086,19 +5086,7 @@ namespace Microsoft.Automata
         }
 
 
-
-
-        // automata
-        // naabruslist, saad ainult state int-ga teha
-        // kirjutab algo 1?
-
-        // proovi algo 1 ja 2
-        // imlement nagu ta on
-        // mitu lõppolekut
-
-        // millised featureid toetab? raamtus on kirjas
-        
-        //AutomatonToDot 
+        #region Test strings generation
 
         private Dictionary<int, List<int>> statesWithNeighbors = new Dictionary<int, List<int>>();
         private Dictionary<int, List<int>> shortestPathsFromInitialState = new Dictionary<int, List<int>>();
@@ -5117,11 +5105,9 @@ namespace Microsoft.Automata
         // Method to add final states
         public void AddFinalState(int finalStateValue)
         {
-            if (!statesWithNeighbors.ContainsKey(finalStateValue) || finalStateValue == 0)
-            {
-                statesWithNeighbors[finalStateValue] = new List<int>();
-                shortestPathsToFinalStates[finalStateValue] = new List<List<int>>();
-            }
+            //if (!statesWithNeighbors.ContainsKey(finalStateValue) || finalStateValue == 0)
+            statesWithNeighbors[finalStateValue] = new List<int>();
+            shortestPathsToFinalStates[finalStateValue] = new List<List<int>>();
         }
 
         // Method to add a connection between states
@@ -5135,7 +5121,7 @@ namespace Microsoft.Automata
         }
 
         // Method to compute shortest paths for all states
-        public IEnumerable<IEnumerable<T>> ComputeShortestPaths()
+        public IEnumerable<IEnumerable<T>> ComputeShortestPaths(List<int> repetitionsForAsterisks)
         {
             InitializeInitialState(initialState);
 
@@ -5154,7 +5140,10 @@ namespace Microsoft.Automata
 
             ComputeShortestPathsFrom0();
             ComputeShortestPathsToFinal();
-            var paths = GeneratePaths();
+
+            var paths = GeneratePaths(repetitionsForAsterisks);
+            //var paths = GeneratePaths2(repetitionsForAsterisks);
+
             List<List<T>> allPaths = new List<List<T>>();
 
             foreach (var path in paths)
@@ -5167,8 +5156,8 @@ namespace Microsoft.Automata
                     {
                         foreach (var move in delta[currState])
                         {
-                            var t = i + 1;
-                            if (t < path.Count && move.TargetState == path[t])
+                            var index = i + 1;
+                            if (index < path.Count && move.TargetState == path[index])
                             {
                                 currentPath.Add(move.Label);
                             }
@@ -5205,8 +5194,6 @@ namespace Microsoft.Automata
         private void ComputeShortestPathsToFinal()
         {
             // Perform breadth-first search (BFS) starting from each final state
-            //if (FinalState == 0) return;
-
             for (int i = 0; i < finalStateSet.Count; i++)
             {
                 int finalState = finalStateSet.ElementAt(i);
@@ -5245,33 +5232,7 @@ namespace Microsoft.Automata
             }
         }
 
-
-
-
-        // algo 2
-        // edgePairs teise muutujasse, et saaks eemaldada
-
-
-        // Method to generate all possible edge pairs
-        // täiendada!!!
-        //public List<(int startState, int middleState, int endState)> GetAllEdgePairs()
-        //{
-        //    List<(int, int, int)> edgePairs = new List<(int, int, int)>();
-
-        //    foreach (var sourceState in statesWithNeighbors.Keys)
-        //    {
-        //        foreach (var targetState1 in statesWithNeighbors[sourceState])
-        //        {
-        //            foreach (var targetState2 in statesWithNeighbors[targetState1])
-        //            {
-        //                edgePairs.Add((sourceState, targetState1, targetState2));
-        //            }
-        //        }
-        //    }
-        //    return edgePairs;
-        //}
-
-        // Method to generate all possible edge pairs
+        //Method to generate all possible edge pairs
         public List<(int startState, int middleState, int endState)> GetAllEdgePairs()
         {
             HashSet<(int, int, int)> edgePairs = new HashSet<(int, int, int)>();
@@ -5291,8 +5252,7 @@ namespace Microsoft.Automata
             return edgePairs.ToList();
         }
 
-
-        public List<List<int>> GeneratePaths()
+        public List<List<int>> GeneratePaths(List<int> repetitionsForAsterisks)
         {
             var edgePairPool = GetAllEdgePairs();
 
@@ -5307,7 +5267,7 @@ namespace Microsoft.Automata
                 int start = edgePair.Item1;
                 int middle = edgePair.Item2;
                 int end = edgePair.Item3;
-
+                
                 for (int i = 0; i < shortestPathsToFinalStates[end].Count; i++)
                 {
                     var path = new List<int>();
@@ -5320,12 +5280,199 @@ namespace Microsoft.Automata
                         paths.Add(path);
                     }
                 }
-                edgePairPool.Remove(edgePair);
 
+                edgePairPool.Remove(edgePair);
             }
 
             return paths;
         }
+
+
+
+
+
+
+        // TODO: 24.04 katsetus - töötab ainult siis kui * liige ei ole viimane ja ei toeta * teise * sees
+        private List<List<int>> asteriskPathsFromStart = new List<List<int>>();
+        private List<List<int>> asteriskPaths = new List<List<int>>();
+        private List<List<int>> GetAsteriskPathsFromStart()
+        {
+            // Find all loops in the automaton
+            asteriskPaths = FindLoops();
+
+            // Initialize a list to store loops where the start of the loop is an epsilon transition
+            //var asteriskPathsFromStart = new List<List<int>>();
+
+            if (!finalStateSet.Contains(initialState))
+            {
+                foreach (var path in asteriskPaths)
+                {
+                    var loopFirstElement = path[0];
+                    // Check if the start of the loop is an epsilon transition
+                    if (delta[loopFirstElement].Any(move => move.IsEpsilon))
+                    {
+                        // If it is, add the loop to asteriskPathsFromStart
+                        asteriskPathsFromStart.Add(path);
+                    }
+                }
+            }
+
+            return asteriskPathsFromStart;
+        }
+
+        public List<(int startState, int middleState, int endState)> GetAllEdgePairs2()
+        {
+            // Get asterisk paths where the start of the loop is an epsilon transition
+            asteriskPathsFromStart = GetAsteriskPathsFromStart();
+
+            HashSet<(int, int, int)> edgePairs = new HashSet<(int, int, int)>();
+
+            foreach (var sourceState in statesWithNeighbors.Keys)
+            {
+                foreach (var targetState1 in statesWithNeighbors[sourceState])
+                {
+                    foreach (var targetState2 in statesWithNeighbors[targetState1])
+                    {
+                        if (!asteriskPathsFromStart.Any(path => IsSublist(path, new List<int> { sourceState, targetState1, targetState2 })) &&
+                            asteriskPaths.Any(path => IsSublist(path, new List<int> { sourceState, targetState1, targetState2 })))
+                        {
+                            continue;
+                        }
+                        edgePairs.Add((sourceState, targetState1, targetState2));
+                    }
+                }
+            }
+
+            // Convert the HashSet to a List and return
+            return edgePairs.ToList();
+        }
+
+        // Function to check if a list is a sublist of another list
+        private bool IsSublist(List<int> list, List<int> sublist)
+        {
+            if (sublist.Count > list.Count)
+                return false;
+
+            for (int i = 0; i <= list.Count - sublist.Count; i++)
+            {
+                if (list.GetRange(i, sublist.Count).SequenceEqual(sublist))
+                    return true;
+            }
+
+            return false;
+        }
+
+        public List<List<int>> GeneratePaths2(List<int> repetitionsForAsterisks)
+        {
+            var edgePairPool = GetAllEdgePairs2();
+
+            List<List<int>> paths = new List<List<int>>();
+
+            Random rand = new Random();
+
+            while (edgePairPool.Count > 0)
+            {
+                (int, int, int) edgePair = edgePairPool[rand.Next(edgePairPool.Count)];
+
+                int start = edgePair.Item1;
+                int middle = edgePair.Item2;
+                int end = edgePair.Item3;
+
+                //var asteriskPath = asteriskPaths.FirstOrDefault(path => path[0] == start);
+                var asteriskPath = asteriskPathsFromStart.FirstOrDefault(path => path[0] == start);
+
+                for (int i = 0; i < shortestPathsToFinalStates[end].Count; i++)
+                {
+                    // * repetitions
+                    if (asteriskPath != null && delta[asteriskPath[0]].Any(move => move.IsEpsilon) && asteriskPath[0] == start && asteriskPath[1] == middle && asteriskPath[2] == end)
+                    {
+                        //TODO: repetitionsForAsterisks[0]
+                        for (int j = 0; j < repetitionsForAsterisks[0]; j++)
+                        {
+                            var path1 = new List<int>();
+                            path1.AddRange(shortestPathsFromInitialState[start].Where(state => state != start));
+                            for (int k = 0; k <= j; k++)
+                            {
+                                path1.AddRange(asteriskPath);
+                            }
+                            path1.AddRange(shortestPathsToFinalStates[end][i].Where(state => state != end));
+
+                            if (!paths.Any(p => p.SequenceEqual(path1)))
+                            {
+                                paths.Add(path1);
+                            }
+                        }
+                        continue;
+                    }
+
+                    var path = new List<int>();
+                    path.AddRange(shortestPathsFromInitialState[start]);
+                    path.Add(middle);
+                    path.AddRange(shortestPathsToFinalStates[end][i]);
+
+                    if (!paths.Any(p => p.SequenceEqual(path)))
+                    {
+                        paths.Add(path);
+                    }
+                }
+
+                edgePairPool.Remove(edgePair);
+            }
+
+            return paths;
+        }
+
+        public List<List<int>> FindLoops()
+        {
+            List<List<int>> loops = new List<List<int>>();
+
+            // Determine the maximum state index
+            int maxStateIndex = statesWithNeighbors.Keys.Max();
+
+            // Initialize the visited array with the correct size
+            bool[] visited = new bool[maxStateIndex + 1];
+
+            // Perform DFS from each state to find loops
+            foreach (int state in statesWithNeighbors.Keys)
+            {
+                List<int> path = new List<int>();
+                DFS(state, state, visited, path, loops);
+            }
+
+            return loops;
+        }
+
+        private void DFS(int startState, int currentState, bool[] visited, List<int> path, List<List<int>> loops)
+        {
+            // Mark the current state as visited and add it to the path
+            visited[currentState] = true;
+            path.Add(currentState);
+
+            // Explore the neighbors of the current state
+            foreach (int nextState in statesWithNeighbors[currentState])
+            {
+                // If the next state is the start state and the path contains more than one state, it's a loop
+                if (nextState == startState && path.Count > 1)
+                {
+                    // Add the loop to the list of loops
+                    loops.Add(new List<int>(path));
+                }
+
+                // If the next state has not been visited, continue DFS traversal
+                if (!visited[nextState])
+                {
+                    DFS(startState, nextState, visited, path, loops);
+                }
+            }
+
+            // Backtrack: remove the current state from the path and mark it as unvisited
+            visited[currentState] = false;
+            path.RemoveAt(path.Count - 1);
+        }
+
+
+
+
 
 
 
@@ -5398,116 +5545,7 @@ namespace Microsoft.Automata
             visited.Remove(currentState);
         }
 
-
-        // test 03.04.24
-        //public void ComputeShortestPaths(State2 state)
-        //{
-        //    var state0 = initialState;
-        //    state0.PathFrom0 = "0";
-        //    state0.IsVisited = true;
-        //    ComputeSPFrom0(state0);
-
-        //    foreach (var stateF in GetFinalStates())
-        //    {
-        //        stateF.PathFrom0 = stateF.Name;
-        //        stateF.IsVisited = true;
-        //        ComputeSPToF(stateF);
-        //    }
-        //}
-
-        //public void ComputeSPFrom0(BDD state)
-        //{
-        //    Queue<BDD> queue = new Queue<BDD>();
-        //    queue.Enqueue(state);
-
-        //    while (queue.Count > 0)
-        //    {
-        //        BDD curState = queue.Dequeue();
-        //        foreach (var nextState in curState.NextStates)
-        //        {
-        //            if (!nextState.IsVisited)
-        //            {
-        //                nextState.PathFrom0 = curState.PathFrom0 + "." + nextState.Name;
-        //                nextState.IsVisited = true;
-        //                queue.Enqueue(nextState);
-        //            }
-        //        }
-        //    }
-        //}
-
-        //private void ComputeSPToF(BDD state)
-        //{
-        //    Queue<BDD> queue = new Queue<BDD>();
-        //    queue.Enqueue(state);
-
-        //    while (queue.Count > 0)
-        //    {
-        //        BDD curState = queue.Dequeue();
-        //        foreach (var preState in curState.PreStates)
-        //        {
-        //            if (!preState.IsVisited)
-        //            {
-        //                preState.PathToF = preState.Name + "." + curState.PathToF;
-        //                preState.IsVisited = true;
-        //                queue.Enqueue(preState);
-        //            }
-        //        }
-        //    }
-        //}
-
-        //public List<string> GenerateTestStrings(Prog prog)
-        //{
-        //    prog.ComputeShortestPaths();
-        //    prog.ComputeEdgeToByteMap();
-
-        //    List<EdgePair> edgePairPool = prog.GetAllEdgePairs();
-        //    List<string> stringList = new List<string>();
-
-        //    while (edgePairPool.Count > 0)
-        //    {
-        //        EdgePair edgePair = GetRandomEdgePair(edgePairPool);
-        //        State start = edgePair.StartState;
-        //        State middle = edgePair.MiddleState;
-        //        State end = edgePair.EndState;
-        //        string path = start.PathFrom0 + "." + middle.Name + "." + end.PathToF;
-        //        string stringInput = ConvertToString(prog, path);
-        //        stringList.Add(stringInput);
-        //        DynamicProgram dynamicProg = DoMatching(prog, stringInput);
-        //        RemoveCoveredEdgePairs(dynamicProg, edgePairPool);
-        //    }
-
-        //    return stringList;
-        //}
-
-        //private EdgePair GetRandomEdgePair(List<EdgePair> edgePairPool)
-        //{
-        //    Random random = new Random();
-        //    int index = random.Next(0, edgePairPool.Count);
-        //    EdgePair randomEdgePair = edgePairPool[index];
-        //    edgePairPool.RemoveAt(index);
-        //    return randomEdgePair;
-        //}
-
-        //private string ConvertToString(Prog prog, string path)
-        //{
-        //    // Implement your logic to convert DFA path to string using edgeToByteMap
-        //    throw new NotImplementedException();
-        //}
-
-        //private DynamicProgram DoMatching(Prog prog, string stringInput)
-        //{
-        //    // Implement your logic to perform matching and return dynamic program
-        //    throw new NotImplementedException();
-        //}
-
-        //private void RemoveCoveredEdgePairs(DynamicProgram dynamicProg, List<EdgePair> edgePairPool)
-        //{
-        //    // Implement your logic to remove covered edge pairs from edgePairPool
-        //    throw new NotImplementedException();
-        //}
-
-
-
+        #endregion
 
 
         #endregion

@@ -40,6 +40,12 @@ namespace ConsoleApp1
 
                 //"^x(xyz)*z?$"
                 //"^x(xyz)*z?$"
+                //"^x*y*$"
+                //"^a(1234)*b?$"
+
+                //"^(abcd)*$"
+
+                //"^x(xyz)*z?$"
                 //"^[a-g]{1,2}x?$"
                 //"^x*$"
 
@@ -47,9 +53,11 @@ namespace ConsoleApp1
                 //"^(ax|bx|bzx)$"
                 
                 //"^a((x*)y*)*$"
-                //"^a((x*)abc(y*))$"
-
-                "^(?=.*[A-Z])(?=.*[a-z])(?=.*\\d)(?=.*[@#$%^&+=])(?!.*\\s).{8,}$"
+                //"^a(12(xy)*)*$"
+                
+                //"^a(1234)*$"
+                //"^a(1234)+r$"
+                //"^Huck[a-zA-Z]+|Saw[a-zA-Z]+$"
             };
 
             // match all regexes
@@ -75,7 +83,7 @@ namespace ConsoleApp1
             Console.WriteLine();
 
             Console.WriteLine("Test algo 1 & 2:");
-            var sample = rexEngine.TestAlgo1(options, 1, 2, regexes);
+            var sample = rexEngine.TestAlgo1(options, 1, new List<int> {4}, regexes);
             foreach (var s in sample)
             {
                 Console.WriteLine(s);

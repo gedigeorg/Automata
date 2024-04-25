@@ -218,7 +218,7 @@ namespace Microsoft.Automata.Rex
             return outputList;
         }
 
-        public List<string> TestAlgo1(RegexOptions options, int k, int repetitions, params string[] regexes)
+        public List<string> TestAlgo1(RegexOptions options, int k, List<int> repetitionsForAsterisks, params string[] regexes)
         {
             RexEngine rexEngine = new RexEngine(BitWidth.BV16);
             var automaton = rexEngine.CreateFromRegexes(options, regexes);
@@ -226,7 +226,7 @@ namespace Microsoft.Automata.Rex
 
             for (int i = 0; i < k; i++)
             {
-                var bddsList = automaton.ComputeShortestPaths();
+                var bddsList = automaton.ComputeShortestPaths(repetitionsForAsterisks);
                 //var bddsArr = bddsList.ToArray();
                 List<List<char[]>> charsList = new List<List<char[]>>();
 
@@ -281,83 +281,6 @@ namespace Microsoft.Automata.Rex
             var automaton = rexEngine.CreateFromRegexes(options, regexes);
             rexEngine.Solver.SaveAsDot(automaton, "x", "x");
         }
-
-        //public List<string> TestAlgo1(RegexOptions options, int repetitions, params string[] regexes)
-        //{
-        //    RexEngine rexEngine = new RexEngine(BitWidth.BV16);
-        //    var automaton = rexEngine.CreateFromRegexes(options, regexes);
-
-        //    var outputList = new List<string>();
-        //    var bddsList = automaton.FindAllConfigs(repetitions);
-        //    //var bddsArr = bddsList.ToArray();
-        //    List<List<char[]>> charsList = new List<List<char[]>>();
-
-        //    foreach (var bdds in bddsList)
-        //    {
-        //        List<char[]> chars = new List<char[]>();
-        //        foreach (var bdd in bdds.ToArray())
-        //        {
-        //            if (bdd == null) continue;
-
-        //            Tuple<uint, uint>[] ranges = bdd.ToRanges();
-        //            foreach (var range in ranges)
-        //            {
-        //                char rangeStart = (char)range.Item1;
-        //                char rangeEnd = (char)range.Item2;
-        //                var charsToAdd = Enumerable.Range(rangeStart, rangeEnd - rangeStart + 1)
-        //                    .Select(c => (char)c)
-        //                    .ToArray();
-        //                chars.Add(charsToAdd);
-        //            }
-        //        }
-        //        charsList.Add(chars);
-        //    }
-
-        //    foreach (var chars in charsList)
-        //    {
-        //        var member = String.Empty;
-        //        foreach (var possibleMoves in chars)
-        //        {
-        //            StringBuilder memberBuilder = new StringBuilder();
-        //            var readableChars = possibleMoves.Where(c => c >= 32 && c <= 127).ToList();
-        //            if (readableChars.Any())
-        //            {
-        //                memberBuilder.Append(readableChars[new Random().Next(readableChars.Count)]);
-        //            }
-        //            else
-        //            {
-        //                memberBuilder.Append(possibleMoves[new Random().Next(possibleMoves.Length)]);
-        //            }
-        //            member += memberBuilder.ToString();
-        //        }
-        //        outputList.Add(member);
-        //    }
-
-        //    return outputList;
-        //}
-
-        //public List<Move<BDD>> CreatePath(Automaton<BDD> automaton, HashSet<int> visitedStates, List<Move<BDD>> currentPath, int currentStateId)
-        //{
-        //    if (automaton.IsFinalState(currentStateId))
-        //        return currentPath.ToList();
-        //    else
-        //    {
-        //        var possibleMoves = automaton.GetMovesFrom(currentStateId).ToArray();
-
-        //        // Print possibleMoves labels
-        //        //Console.Write("Moves from state {0}: ", currentStateId);
-        //        foreach (var move in possibleMoves)
-        //        {
-
-        //            //Console.Write("{0} ", move.Label);
-        //        }
-
-        //        visitedStates.Add(currentStateId);
-        //        var oneMove = possibleMoves.First(v => v.SourceState != v.TargetState);
-        //        return CreatePath(automaton, visitedStates, new List<Move<BDD>>(currentPath) { oneMove }, oneMove.TargetState);
-        //    }
-        //}
-
 
 
 
