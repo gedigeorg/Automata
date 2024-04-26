@@ -218,7 +218,7 @@ namespace Microsoft.Automata.Rex
             return outputList;
         }
 
-        public List<string> TestAlgo1(RegexOptions options, int k, List<int> repetitionsForAsterisks, params string[] regexes)
+        public List<string> TestAlgo1(RegexOptions options, int k, List<int> repetitionsForAsterisks, bool almostMatch = false, int minLength = Int32.MinValue, int maxLength = Int32.MaxValue, params string[] regexes)
         {
             RexEngine rexEngine = new RexEngine(BitWidth.BV16);
             var automaton = rexEngine.CreateFromRegexes(options, regexes);
@@ -226,8 +226,8 @@ namespace Microsoft.Automata.Rex
 
             for (int i = 0; i < k; i++)
             {
-                var bddsList = automaton.ComputeShortestPaths(repetitionsForAsterisks);
-                //var bddsArr = bddsList.ToArray();
+                var bddsList = automaton.ComputeShortestPaths(repetitionsForAsterisks, almostMatch);
+                
                 List<List<char[]>> charsList = new List<List<char[]>>();
 
                 foreach (var bdds in bddsList)
@@ -268,7 +268,11 @@ namespace Microsoft.Automata.Rex
                         }
                         member += memberBuilder.ToString();
                     }
-                    outputList.Add(member);
+
+                    if (member.Length >= minLength && member.Length <= maxLength && member != String.Empty && member != "")
+                    {
+                        outputList.Add(member);
+                    }
                 }
             }
 

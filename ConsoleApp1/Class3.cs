@@ -56,8 +56,8 @@ namespace ConsoleApp1
                 //"^a(12(xy)*)*$"
                 
                 //"^a(1234)*$"
-                //"^a(1234)+r$"
-                //"^Huck[a-zA-Z]+|Saw[a-zA-Z]+$"
+                //"^a(1234)+$"
+                "^Huck[a-zA-Z]+|Saw[a-zA-Z]+$"
             };
 
             // match all regexes
@@ -83,7 +83,8 @@ namespace ConsoleApp1
             Console.WriteLine();
 
             Console.WriteLine("Test algo 1 & 2:");
-            var sample = rexEngine.TestAlgo1(options, 1, new List<int> {4}, regexes);
+            //var sample = rexEngine.TestAlgo1(options, 1, new List<int> {4}, 4, 7, regexes);
+            var sample = rexEngine.TestAlgo1(options, 1, new List<int> {4}, true, regexes: regexes);
             foreach (var s in sample)
             {
                 Console.WriteLine(s);

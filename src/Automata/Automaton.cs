@@ -5121,7 +5121,7 @@ namespace Microsoft.Automata
         }
 
         // Method to compute shortest paths for all states
-        public IEnumerable<IEnumerable<T>> ComputeShortestPaths(List<int> repetitionsForAsterisks)
+        public IEnumerable<IEnumerable<T>> ComputeShortestPaths(List<int> repetitionsForAsterisks, bool almostMatch)
         {
             InitializeInitialState(initialState);
 
@@ -5141,7 +5141,7 @@ namespace Microsoft.Automata
             ComputeShortestPathsFrom0();
             ComputeShortestPathsToFinal();
 
-            var paths = GeneratePaths(repetitionsForAsterisks);
+            var paths = GeneratePaths(almostMatch);
             //var paths = GeneratePaths2(repetitionsForAsterisks);
 
             List<List<T>> allPaths = new List<List<T>>();
@@ -5252,7 +5252,7 @@ namespace Microsoft.Automata
             return edgePairs.ToList();
         }
 
-        public List<List<int>> GeneratePaths(List<int> repetitionsForAsterisks)
+        public List<List<int>> GeneratePaths(bool almostMatch)
         {
             var edgePairPool = GetAllEdgePairs();
 
@@ -5275,6 +5275,11 @@ namespace Microsoft.Automata
                     path.Add(middle);
                     path.AddRange(shortestPathsToFinalStates[end][i]);
 
+                    if (almostMatch)
+                    {
+                        DoAlmostMatching(path);
+                    }
+
                     if (!paths.Any(p => p.SequenceEqual(path)))
                     {
                         paths.Add(path);
@@ -5286,6 +5291,33 @@ namespace Microsoft.Automata
 
             return paths;
         }
+
+        private void DoAlmostMatching(List<int> path)
+        {
+            while (finalStateSet.Contains(path.Last()))
+            {
+                var last = path.Count - 1;
+                var removedFinalState = path[last];
+                path.RemoveAt(last);
+
+                if (delta[path.Last()].Any(move => move.IsEpsilon && move.TargetState == removedFinalState))
+                {
+                    for (int i = path.Count - 1; i >= 0; i--)
+                    {
+                        var removed = path[i];
+                        path.RemoveAt(i);
+
+                        if (path.Last() == removed)
+                        {
+                            continue;
+                        }
+                        break;
+                    }
+                }
+            }
+        }
+
+
 
 
 
