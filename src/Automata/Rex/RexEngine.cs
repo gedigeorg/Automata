@@ -222,6 +222,9 @@ namespace Microsoft.Automata.Rex
         {
             RexEngine rexEngine = new RexEngine(BitWidth.BV16);
             var automaton = rexEngine.CreateFromRegexes(options, regexes);
+            automaton = automaton.Determinize();
+            rexEngine.Solver.SaveAsDot(automaton, "x", "x");
+
             var outputList = new List<string>();
 
             for (int i = 0; i < k; i++)

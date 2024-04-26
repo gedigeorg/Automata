@@ -5138,7 +5138,7 @@ namespace Microsoft.Automata
                 }
             }
 
-            ComputeShortestPathsFrom0();
+            ComputeShortestPathsFromInitState();
             ComputeShortestPathsToFinal();
 
             var paths = GeneratePaths(almostMatch);
@@ -5171,7 +5171,7 @@ namespace Microsoft.Automata
         }
 
         // Method to compute shortest paths from initial state
-        private void ComputeShortestPathsFrom0()
+        private void ComputeShortestPathsFromInitState()
         {
             Queue<int> queue = new Queue<int>();
             queue.Enqueue(initialState);
@@ -5210,6 +5210,7 @@ namespace Microsoft.Automata
                     {
                         if (statesWithNeighbors[state].Contains(curState))
                         {
+                            // jama indexiga, debug
                             if (!shortestPathsToFinalStates.ContainsKey(state) ||
                                 shortestPathsToFinalStates[state].Count <= i ||
                                 shortestPathsToFinalStates[state][i].Count > shortestPathsToFinalStates[curState][i].Count + 1)
@@ -6110,7 +6111,7 @@ namespace Microsoft.Automata
         //    var initialState = GetInitialState();
         //    initialState.PathFrom0 = "0";
         //    initialState.Visited = true;
-        //    ComputeShortestPathsFrom0(initialState);
+        //    ComputeShortestPathsFromInitState(initialState);
 
         //    var finalStates = GetFinalStates();
         //    foreach (var finalState in finalStates)
@@ -6123,7 +6124,7 @@ namespace Microsoft.Automata
         //    return finalStates.Select(finalState => finalState.PathToF);
         //}
 
-        //private void ComputeShortestPathsFrom0(State state)
+        //private void ComputeShortestPathsFromInitState(State state)
         //{
         //    var queue = new Queue<State>();
         //    queue.Enqueue(state);
