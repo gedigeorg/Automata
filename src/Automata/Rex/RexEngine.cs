@@ -218,6 +218,71 @@ namespace Microsoft.Automata.Rex
             return outputList;
         }
 
+        //public List<string> TestAlgo1(RegexOptions options, int k, List<int> repetitionsForAsterisks, bool almostMatch = false, int minLength = Int32.MinValue, int maxLength = Int32.MaxValue, params string[] regexes)
+        //{
+        //    RexEngine rexEngine = new RexEngine(BitWidth.BV16);
+        //    var automaton = rexEngine.CreateFromRegexes(options, regexes);
+        //    automaton = automaton.Determinize();
+        //    rexEngine.Solver.SaveAsDot(automaton, "x", "x");
+
+        //    var outputList = new List<string>();
+
+        //    for (int i = 0; i < k; i++)
+        //    {
+        //        var bddsList = automaton.ComputeShortestPaths(repetitionsForAsterisks, almostMatch);
+
+        //        List<List<char[]>> charsList = new List<List<char[]>>();
+
+        //        foreach (var bdds in bddsList)
+        //        {
+        //            List<char[]> chars = new List<char[]>();
+        //            foreach (var bdd in bdds.ToArray())
+        //            {
+        //                if (bdd == null) continue;
+
+        //                Tuple<uint, uint>[] ranges = bdd.ToRanges();
+        //                foreach (var range in ranges)
+        //                {
+        //                    char rangeStart = (char)range.Item1;
+        //                    char rangeEnd = (char)range.Item2;
+        //                    var charsToAdd = Enumerable.Range(rangeStart, rangeEnd - rangeStart + 1)
+        //                        .Select(c => (char)c)
+        //                        .ToArray();
+        //                    chars.Add(charsToAdd);
+        //                }
+        //            }
+        //            charsList.Add(chars);
+        //        }
+
+        //        foreach (var chars in charsList)
+        //        {
+        //            var member = String.Empty;
+        //            foreach (var possibleMoves in chars)
+        //            {
+        //                StringBuilder memberBuilder = new StringBuilder();
+        //                var readableChars = possibleMoves.Where(c => c >= 32 && c <= 127).ToList();
+        //                if (readableChars.Any())
+        //                {
+        //                    memberBuilder.Append(readableChars[new Random().Next(readableChars.Count)]);
+        //                }
+        //                else
+        //                {
+        //                    memberBuilder.Append(possibleMoves[new Random().Next(possibleMoves.Length)]);
+        //                }
+        //                member += memberBuilder.ToString();
+        //            }
+
+        //            if (member.Length >= minLength && member.Length <= maxLength && member != String.Empty && member != "")
+        //            {
+        //                outputList.Add(member);
+        //            }
+        //        }
+        //    }
+
+        //    return outputList;
+        //}
+
+
         public List<string> TestAlgo1(RegexOptions options, int k, List<int> repetitionsForAsterisks, bool almostMatch = false, int minLength = Int32.MinValue, int maxLength = Int32.MaxValue, params string[] regexes)
         {
             RexEngine rexEngine = new RexEngine(BitWidth.BV16);
@@ -230,26 +295,32 @@ namespace Microsoft.Automata.Rex
             for (int i = 0; i < k; i++)
             {
                 var bddsList = automaton.ComputeShortestPaths(repetitionsForAsterisks, almostMatch);
-                
-                List<List<char[]>> charsList = new List<List<char[]>>();
+
+                List<List<char>> charsList = new List<List<char>>();
 
                 foreach (var bdds in bddsList)
                 {
-                    List<char[]> chars = new List<char[]>();
+                    List<char> chars = new List<char>();
                     foreach (var bdd in bdds.ToArray())
                     {
                         if (bdd == null) continue;
 
                         Tuple<uint, uint>[] ranges = bdd.ToRanges();
+                        var symbols = new List<char>();
                         foreach (var range in ranges)
                         {
                             char rangeStart = (char)range.Item1;
                             char rangeEnd = (char)range.Item2;
                             var charsToAdd = Enumerable.Range(rangeStart, rangeEnd - rangeStart + 1)
-                                .Select(c => (char)c)
-                                .ToArray();
-                            chars.Add(charsToAdd);
+                                .Select(c => (char)c);
+                            symbols.AddRange(charsToAdd);
                         }
+
+                        Random rand = new Random();
+                        int randomIndex = rand.Next(0, symbols.Count);
+                        char randomChar = symbols[randomIndex];
+
+                        chars.Add(randomChar);
                     }
                     charsList.Add(chars);
                 }
@@ -260,14 +331,13 @@ namespace Microsoft.Automata.Rex
                     foreach (var possibleMoves in chars)
                     {
                         StringBuilder memberBuilder = new StringBuilder();
-                        var readableChars = possibleMoves.Where(c => c >= 32 && c <= 127).ToList();
-                        if (readableChars.Any())
+                        if (possibleMoves >= 32 && possibleMoves <= 127)
                         {
-                            memberBuilder.Append(readableChars[new Random().Next(readableChars.Count)]);
+                            memberBuilder.Append(possibleMoves);
                         }
                         else
                         {
-                            memberBuilder.Append(possibleMoves[new Random().Next(possibleMoves.Length)]);
+                            memberBuilder.Append(possibleMoves);
                         }
                         member += memberBuilder.ToString();
                     }
@@ -280,6 +350,142 @@ namespace Microsoft.Automata.Rex
             }
 
             return outputList;
+        }
+
+
+
+        public List<string> TestAlgo1test(RegexOptions options, int k, List<int> repetitionsForAsterisks, bool almostMatch = false, int minLength = Int32.MinValue, int maxLength = Int32.MaxValue, params string[] regexes)
+        {
+            RexEngine rexEngine = new RexEngine(BitWidth.BV16);
+            var automaton = rexEngine.CreateFromRegexes(options, regexes);
+            automaton = automaton.Determinize();
+            //automaton = automaton.Minimize();
+            rexEngine.Solver.SaveAsDot(automaton, "x", "x");
+
+            var outputList = new List<string>();
+
+            for (int i = 0; i < k; i++)
+            {
+                var bddsList = automaton.ComputeShortestPaths(repetitionsForAsterisks, almostMatch);
+
+                List<List<string>> charsList = new List<List<string>>();
+
+                foreach (var bdds in bddsList)
+                {
+                    List<string> chars = new List<string>();
+                    foreach (var bdd in bdds.ToArray())
+                    {
+                        if (bdd == null) continue;
+
+                        var text = bdd.ToString();
+                        if (text.StartsWith("[") && text.EndsWith("]"))
+                        {
+                            chars.Add(text);
+                            continue;
+                        }
+
+                        Tuple<uint, uint>[] ranges = bdd.ToRanges();
+                        foreach (var range in ranges)
+                        {
+                            char rangeStart = (char)range.Item1;
+                            char rangeEnd = (char)range.Item2;
+                            var charsToAdd = Enumerable.Range(rangeStart, rangeEnd - rangeStart + 1)
+                                .Select(c => (char)c)
+                                .ToArray();
+
+                            List<string> stringList = new List<string>();
+                            foreach (char c in charsToAdd)
+                            {
+                                stringList.Add(c.ToString());
+                            }
+
+                            chars.AddRange(stringList);
+                            //chars.AddRange(charsToAdd.ToList() as IEnumerable<string>);
+                        }
+                    }
+                    charsList.Add(chars);
+                }
+
+                foreach (var chars in charsList)
+                {
+                    var members = new List<string>();
+                    foreach (var possibleMoves in chars)
+                    {
+                        if (possibleMoves[0] == '[' && possibleMoves[^1] == ']')
+                        {
+                            
+                        }
+                    }
+                    var member = GetMember(chars);
+                    members.Add(member);
+                    //var combinations = new List<string>();
+                    //GenerateCombinations(chars, 0, new StringBuilder(), combinations);
+                    //return combinations;
+
+                    outputList.AddRange(members);
+
+                    //if (member.Length >= minLength && member.Length <= maxLength && member != String.Empty && member != "")
+                    //{
+                    //    outputList.Add(member);
+                    //}
+                }
+            }
+
+            return outputList;
+        }
+
+        private void GenerateCombinations(List<string> strings, int index, StringBuilder current, List<string> combinations)
+        {
+            if (index == strings.Count)
+            {
+                combinations.Add(current.ToString());
+                return;
+            }
+
+            string currentString = strings[index];
+
+            if (currentString.StartsWith("[") && currentString.EndsWith("]"))
+            {
+                string options = currentString.Substring(1, currentString.Length - 2);
+                string[] alternatives = options.Split('|'); // Split options by '|'
+
+                foreach (string alternative in alternatives)
+                {
+                    foreach (char c in alternative)
+                    {
+                        current.Append(c);
+                        GenerateCombinations(strings, index + 1, current, combinations);
+                        current.Remove(current.Length - 1, 1);
+                    }
+                }
+            }
+            else
+            {
+                current.Append(currentString);
+                GenerateCombinations(strings, index + 1, current, combinations);
+                current.Remove(current.Length - currentString.Length, currentString.Length);
+            }
+        }
+
+        private string GetMember(List<string> chars)
+        {
+            var member = String.Empty;
+            foreach (var possibleMoves in chars)
+            {
+                StringBuilder memberBuilder = new StringBuilder();
+                var readableChars = possibleMoves.Where(c => c >= 32 && c <= 127).ToList();
+                if (readableChars.Any())
+                {
+                    memberBuilder.Append(readableChars[new Random().Next(readableChars.Count)]);
+                }
+                else
+                {
+                    memberBuilder.Append(possibleMoves[new Random().Next(possibleMoves.Length)]);
+                }
+                member += memberBuilder.ToString();
+            }
+
+            return member;
         }
 
         public void Visualize(RegexOptions options, params string[] regexes)

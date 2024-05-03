@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Text;
 using Microsoft.Automata;
 using Microsoft.Automata.Utilities;
@@ -5090,7 +5091,9 @@ namespace Microsoft.Automata
 
         private Dictionary<int, List<int>> statesWithNeighbors = new Dictionary<int, List<int>>();
         private Dictionary<int, List<int>> shortestPathsFromInitialState = new Dictionary<int, List<int>>();
-        private Dictionary<int, List<List<int>>> shortestPathsToFinalStates = new Dictionary<int, List<List<int>>>();
+        //private Dictionary<int, List<List<int>>> shortestPathsToFinalStates = new Dictionary<int, List<List<int>>>();
+        //TODO:
+        private Dictionary<int, Dictionary<int, List<int>>> shortestPathsToFinalStates = new Dictionary<int, Dictionary<int, List<int>>>();
 
         // Method to initialize the initial state
         public void InitializeInitialState(int initialStateValue)
@@ -5107,7 +5110,8 @@ namespace Microsoft.Automata
         {
             //if (!statesWithNeighbors.ContainsKey(finalStateValue) || finalStateValue == 0)
             statesWithNeighbors[finalStateValue] = new List<int>();
-            shortestPathsToFinalStates[finalStateValue] = new List<List<int>>();
+            shortestPathsToFinalStates[finalStateValue] = new Dictionary<int, List<int>>();
+            //shortestPathsToFinalStates[finalStateValue] = new List<List<int>>();
         }
 
         // Method to add a connection between states
@@ -5149,20 +5153,12 @@ namespace Microsoft.Automata
             foreach (var path in paths)
             {
                 List<T> currentPath = new List<T>();
-                for (int i = 0; i < path.Count; i++)
+                for (int i = 0; i < path.Count-1; i++)
                 {
                     var currState = path[i];
-                    if (delta.ContainsKey(currState))
-                    {
-                        foreach (var move in delta[currState])
-                        {
-                            var index = i + 1;
-                            if (index < path.Count && move.TargetState == path[index])
-                            {
-                                currentPath.Add(move.Label);
-                            }
-                        }
-                    }
+                    var nextState = path[i+1];
+                    var t = delta[currState].First(x => x.TargetState == nextState);
+                    currentPath.Add(t.Label);
                 }
                 allPaths.Add(new List<T>(currentPath));
             }
@@ -5194,37 +5190,65 @@ namespace Microsoft.Automata
         private void ComputeShortestPathsToFinal()
         {
             // Perform breadth-first search (BFS) starting from each final state
-            for (int i = 0; i < finalStateSet.Count; i++)
+            foreach (int finalState in finalStateSet)
             {
-                int finalState = finalStateSet.ElementAt(i);
+                // Initialize the shortest path dictionary for the final state
+                shortestPathsToFinalStates[finalState] = new Dictionary<int, List<int>>();
+
+                // Dictionary to track visited states during BFS for each final state
+                //HashSet<int> visited = new HashSet<int>();
+
+                // Queue for BFS traversal
                 Queue<int> queue = new Queue<int>();
                 queue.Enqueue(finalState);
-
-                // Initialize the shortest path for the final state
-                shortestPathsToFinalStates[finalState].Add(new List<int> { finalState });
+                //visited.Add(finalState);
 
                 while (queue.Count > 0)
                 {
                     int curState = queue.Dequeue();
+
                     foreach (var state in statesWithNeighbors.Keys)
                     {
-                        if (statesWithNeighbors[state].Contains(curState))
+                        if (statesWithNeighbors[state].Contains(curState)) // && !visited.Contains(state))
                         {
-                            // jama indexiga, debug
+                            // Mark the state as visited
+                            //visited.Add(state);
+
+                            // Check if the shortest path dictionary contains the state for the final state
                             if (!shortestPathsToFinalStates.ContainsKey(state) ||
-                                shortestPathsToFinalStates[state].Count <= i ||
-                                shortestPathsToFinalStates[state][i].Count > shortestPathsToFinalStates[curState][i].Count + 1)
+                                !shortestPathsToFinalStates[state].ContainsKey(finalState) ||
+                                shortestPathsToFinalStates[state][finalState].Count > shortestPathsToFinalStates[curState][finalState].Count + 1)
                             {
-                                // Check if the key exists, if not, add it to the dictionary
+                                // If not, initialize it
                                 if (!shortestPathsToFinalStates.ContainsKey(state))
                                 {
-                                    shortestPathsToFinalStates[state] = new List<List<int>>();
+                                    shortestPathsToFinalStates[state] = new Dictionary<int, List<int>>();
                                 }
 
+                                if (curState == finalState && !shortestPathsToFinalStates[curState].ContainsKey(finalState))
+                                {
+                                    shortestPathsToFinalStates[curState].Add(finalState, new List<int>(){curState});
+                                }
+
+                                // Copy the shortest path from the current state and append the current state
                                 List<int> newPath = new List<int>();
                                 newPath.Add(state);
-                                newPath.AddRange(shortestPathsToFinalStates[curState][shortestPathsToFinalStates[curState].Count - 1]);
-                                shortestPathsToFinalStates[state].Add(newPath);
+                                if (!shortestPathsToFinalStates[state].ContainsKey(finalState))
+                                {
+                                    shortestPathsToFinalStates[state].Add(finalState, new List<int>());
+                                }
+                                if (!shortestPathsToFinalStates[curState].ContainsKey(finalState))
+                                {
+                                    shortestPathsToFinalStates[curState].Add(finalState, new List<int>());
+                                }
+                                newPath.AddRange(shortestPathsToFinalStates[curState][finalState]);
+                                if (newPath.Last() != finalState)
+                                {
+                                    newPath.Add(finalState);
+                                }
+                                shortestPathsToFinalStates[state][finalState] = newPath;
+
+                                // Enqueue the neighbor state for further exploration
                                 queue.Enqueue(state);
                             }
                         }
@@ -5232,6 +5256,10 @@ namespace Microsoft.Automata
                 }
             }
         }
+
+
+
+
 
         //Method to generate all possible edge pairs
         public List<(int startState, int middleState, int endState)> GetAllEdgePairs()
@@ -5268,13 +5296,13 @@ namespace Microsoft.Automata
                 int start = edgePair.Item1;
                 int middle = edgePair.Item2;
                 int end = edgePair.Item3;
-                
-                for (int i = 0; i < shortestPathsToFinalStates[end].Count; i++)
+
+                foreach (var finalState in shortestPathsToFinalStates[end].Keys)
                 {
                     var path = new List<int>();
                     path.AddRange(shortestPathsFromInitialState[start]);
                     path.Add(middle);
-                    path.AddRange(shortestPathsToFinalStates[end][i]);
+                    path.AddRange(shortestPathsToFinalStates[end][finalState]);
 
                     if (almostMatch)
                     {
