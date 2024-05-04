@@ -5089,77 +5089,45 @@ namespace Microsoft.Automata
 
         #region Test strings generation
 
-        private Dictionary<int, List<int>> statesWithNeighbors = new Dictionary<int, List<int>>();
         private Dictionary<int, List<int>> shortestPathsFromInitialState = new Dictionary<int, List<int>>();
-        //private Dictionary<int, List<List<int>>> shortestPathsToFinalStates = new Dictionary<int, List<List<int>>>();
-        //TODO:
         private Dictionary<int, Dictionary<int, List<int>>> shortestPathsToFinalStates = new Dictionary<int, Dictionary<int, List<int>>>();
-
-        // Method to initialize the initial state
-        public void InitializeInitialState(int initialStateValue)
-        {
-            if (!statesWithNeighbors.ContainsKey(initialStateValue))
-            {
-                statesWithNeighbors[initialStateValue] = new List<int>();
-                shortestPathsFromInitialState[initialStateValue] = new List<int> { initialStateValue };
-            }
-        }
-
-        // Method to add final states
-        public void AddFinalState(int finalStateValue)
-        {
-            //if (!statesWithNeighbors.ContainsKey(finalStateValue) || finalStateValue == 0)
-            statesWithNeighbors[finalStateValue] = new List<int>();
-            shortestPathsToFinalStates[finalStateValue] = new Dictionary<int, List<int>>();
-            //shortestPathsToFinalStates[finalStateValue] = new List<List<int>>();
-        }
-
-        // Method to add a connection between states
-        public void AddConnection(int stateValue, int nextStateValue)
-        {
-            if (!statesWithNeighbors.ContainsKey(stateValue))
-            {
-                statesWithNeighbors[stateValue] = new List<int>();
-            }
-            statesWithNeighbors[stateValue].Add(nextStateValue);
-        }
 
         // Method to compute shortest paths for all states
         public IEnumerable<IEnumerable<T>> ComputeShortestPaths(List<int> repetitionsForAsterisks, bool almostMatch)
         {
-            InitializeInitialState(initialState);
+            shortestPathsFromInitialState[initialState] = new List<int> { initialState };
 
             foreach (var finalState in finalStateSet)
             {
-                AddFinalState(finalState);
-            }
-
-            foreach (var current in delta)
-            {
-                foreach (var move in current.Value)
-                {
-                    AddConnection(move.SourceState, move.TargetState);
-                }
+                shortestPathsToFinalStates[finalState] = new Dictionary<int, List<int>>();
             }
 
             ComputeShortestPathsFromInitState();
+
             ComputeShortestPathsToFinal();
 
             var paths = GeneratePaths(almostMatch);
-            //var paths = GeneratePaths2(repetitionsForAsterisks);
 
+            var allPaths = GetAllPaths(paths);
+
+            return allPaths;
+        }
+
+        private List<List<T>> GetAllPaths(List<List<int>> paths)
+        {
             List<List<T>> allPaths = new List<List<T>>();
 
             foreach (var path in paths)
             {
                 List<T> currentPath = new List<T>();
-                for (int i = 0; i < path.Count-1; i++)
+                for (int i = 0; i < path.Count - 1; i++)
                 {
                     var currState = path[i];
-                    var nextState = path[i+1];
+                    var nextState = path[i + 1];
                     var t = delta[currState].First(x => x.TargetState == nextState);
                     currentPath.Add(t.Label);
                 }
+
                 allPaths.Add(new List<T>(currentPath));
             }
 
@@ -5175,13 +5143,13 @@ namespace Microsoft.Automata
             while (queue.Count > 0)
             {
                 int curState = queue.Dequeue();
-                foreach (var nextState in statesWithNeighbors[curState])
+                foreach (var nextState in delta[curState])
                 {
-                    if (!shortestPathsFromInitialState.ContainsKey(nextState))
+                    if (!shortestPathsFromInitialState.ContainsKey(nextState.TargetState))
                     {
-                        shortestPathsFromInitialState[nextState] = new List<int>(shortestPathsFromInitialState[curState]);
-                        shortestPathsFromInitialState[nextState].Add(nextState);
-                        queue.Enqueue(nextState);
+                        shortestPathsFromInitialState[nextState.TargetState] = new List<int>(shortestPathsFromInitialState[curState]);
+                        shortestPathsFromInitialState[nextState.TargetState].Add(nextState.TargetState);
+                        queue.Enqueue(nextState.TargetState);
                     }
                 }
             }
@@ -5207,9 +5175,10 @@ namespace Microsoft.Automata
                 {
                     int curState = queue.Dequeue();
 
-                    foreach (var state in statesWithNeighbors.Keys)
+                    foreach (var state in delta.Keys)
                     {
-                        if (statesWithNeighbors[state].Contains(curState)) // && !visited.Contains(state))
+                        //if (statesWithNeighbors[state].Contains(curState)) // && !visited.Contains(state))
+                        if (delta[state].Select(x => x.TargetState).Contains(curState)) // && !visited.Contains(state))
                         {
                             // Mark the state as visited
                             //visited.Add(state);
@@ -5263,13 +5232,14 @@ namespace Microsoft.Automata
         {
             HashSet<(int, int, int)> edgePairs = new HashSet<(int, int, int)>();
 
-            foreach (var sourceState in statesWithNeighbors.Keys)
+            foreach (var sourceState in delta.Keys)
             {
-                foreach (var targetState1 in statesWithNeighbors[sourceState])
+                //foreach (var targetState1 in statesWithNeighbors[sourceState])
+                foreach (var targetState1 in delta[sourceState])
                 {
-                    foreach (var targetState2 in statesWithNeighbors[targetState1])
+                    foreach (var targetState2 in delta[targetState1.TargetState])
                     {
-                        edgePairs.Add((sourceState, targetState1, targetState2));
+                        edgePairs.Add((sourceState, targetState1.TargetState, targetState2.TargetState));
                     }
                 }
             }
@@ -5281,7 +5251,7 @@ namespace Microsoft.Automata
         {
             var edgePairPool = GetAllEdgePairs();
 
-                List<List<int>> paths = new List<List<int>>();
+            List<List<int>> paths = new List<List<int>>();
 
             Random rand = new Random();
 

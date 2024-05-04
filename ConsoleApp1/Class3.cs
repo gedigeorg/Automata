@@ -33,7 +33,7 @@ namespace ConsoleApp1
                 //"^x(xyz)*$",
                 //"^x(xyz)*z$"
 
-                //"^(adhi?|be(i)?|cfe(i)?|cg)$"
+                "^(adhi?|be(i)?|cfe(i)?|cg)$"
                 //"^(a*b*c*|1*2*3*)*$"
 
                 //"^(a|bc)$"
@@ -73,8 +73,11 @@ namespace ConsoleApp1
                 //"^ab(.*cdefghx|.*cdefghij)$"
                 //"^ab(.*x|.*i)$"
                 //"^ab(x|i)$"
-                //"^a(xy){1,5}$"
+                //"^a(xy){90,100}$"
                 //"^a(x{0,2}|y{0,3})$"
+
+                // took time but generated
+                //"^a{0,1000}$"
             };
 
             // match all regexes
