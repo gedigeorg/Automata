@@ -72,7 +72,7 @@ namespace ConsoleApp1
                 //"^ab(.*cdefghx|.*cdefghi)$"
                 //"^ab(.*cdefghx|.*cdefghij)$"
                 //"^ab(.*x|.*i)$"
-                "^ab(x|i)$"
+                //"^ab(x|i)$"
                 //"^a(xy){1,5}$"
                 //"^a(x{0,2}|y{0,3})$"
             };
@@ -101,13 +101,15 @@ namespace ConsoleApp1
 
             Console.WriteLine("Test algo 1 & 2:");
             //var sample = rexEngine.TestAlgo1(options, 1, new List<int> {4}, 4, 7, regexes);
-            var sample = rexEngine.TestAlgo1(options, 1, new List<int> {4}, false, regexes: regexes);
+            var sample = rexEngine.GenerateTestStrings(options, new List<int> {4}, false, regexes: regexes);
             Console.WriteLine();
             foreach (var s in sample)
             {
                 Console.WriteLine(s);
+                Console.WriteLine(Regex.IsMatch(s, regexes[0]));
                 Console.WriteLine();
             }
+
 
             // NFA -> DFA
             // def * kui midagi muud nt vahemik {}
