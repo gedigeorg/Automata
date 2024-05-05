@@ -5155,78 +5155,154 @@ namespace Microsoft.Automata
             }
         }
 
+        //private void ComputeShortestPathsToFinal()
+        //{
+        //    // Perform breadth-first search (BFS) starting from each final state
+        //    foreach (int finalState in finalStateSet)
+        //    {
+        //        // Initialize the shortest path dictionary for the final state
+        //        shortestPathsToFinalStates[finalState] = new Dictionary<int, List<int>>();
+
+        //        // Dictionary to track visited states during BFS for each final state
+        //        HashSet<int> visited = new HashSet<int>();
+
+        //        // Queue for BFS traversal
+        //        Queue<int> queue = new Queue<int>();
+        //        queue.Enqueue(finalState);
+        //        //visited.Add(finalState);
+
+        //        while (queue.Count > 0)
+        //        {
+        //            int curState = queue.Dequeue();
+
+        //            foreach (var state in delta.Keys)
+        //            {
+        //                //if (statesWithNeighbors[state].Contains(curState)) // && !visited.Contains(state))
+        //                if (delta[state].Select(x => x.TargetState).Contains(curState) && !visited.Contains(state))
+        //                {
+        //                    // Mark the state as visited
+        //                    visited.Add(state);
+
+        //                    // Check if the shortest path dictionary contains the state for the final state
+        //                    if (!shortestPathsToFinalStates.ContainsKey(state) ||
+        //                        !shortestPathsToFinalStates[state].ContainsKey(finalState) ||
+        //                        shortestPathsToFinalStates[state][finalState].Count > shortestPathsToFinalStates[curState][finalState].Count + 1)
+        //                    {
+        //                        // If not, initialize it
+        //                        if (!shortestPathsToFinalStates.ContainsKey(state))
+        //                        {
+        //                            shortestPathsToFinalStates[state] = new Dictionary<int, List<int>>();
+        //                        }
+
+        //                        if (curState == finalState && !shortestPathsToFinalStates[curState].ContainsKey(finalState))
+        //                        {
+        //                            shortestPathsToFinalStates[curState].Add(finalState, new List<int>() { curState });
+        //                        }
+
+        //                        // Copy the shortest path from the current state and append the current state
+        //                        List<int> newPath = new List<int>();
+        //                        newPath.Add(state);
+        //                        if (!shortestPathsToFinalStates[state].ContainsKey(finalState))
+        //                        {
+        //                            shortestPathsToFinalStates[state].Add(finalState, new List<int>());
+        //                        }
+        //                        if (!shortestPathsToFinalStates[curState].ContainsKey(finalState))
+        //                        {
+        //                            shortestPathsToFinalStates[curState].Add(finalState, new List<int>());
+        //                        }
+        //                        newPath.AddRange(shortestPathsToFinalStates[curState][finalState]);
+        //                        if (newPath.Last() != finalState)
+        //                        {
+        //                            newPath.Add(finalState);
+        //                        }
+        //                        shortestPathsToFinalStates[state][finalState] = newPath;
+
+        //                        // Enqueue the neighbor state for further exploration
+        //                        queue.Enqueue(state);
+        //                    }
+        //                }
+        //            }
+        //        }
+        //    }
+        //}
+
         private void ComputeShortestPathsToFinal()
         {
-            // Perform breadth-first search (BFS) starting from each final state
             foreach (int finalState in finalStateSet)
             {
-                // Initialize the shortest path dictionary for the final state
                 shortestPathsToFinalStates[finalState] = new Dictionary<int, List<int>>();
-
-                // Dictionary to track visited states during BFS for each final state
-                //HashSet<int> visited = new HashSet<int>();
-
-                // Queue for BFS traversal
-                Queue<int> queue = new Queue<int>();
-                queue.Enqueue(finalState);
-                //visited.Add(finalState);
-
-                while (queue.Count > 0)
-                {
-                    int curState = queue.Dequeue();
-
-                    foreach (var state in delta.Keys)
-                    {
-                        //if (statesWithNeighbors[state].Contains(curState)) // && !visited.Contains(state))
-                        if (delta[state].Select(x => x.TargetState).Contains(curState)) // && !visited.Contains(state))
-                        {
-                            // Mark the state as visited
-                            //visited.Add(state);
-
-                            // Check if the shortest path dictionary contains the state for the final state
-                            if (!shortestPathsToFinalStates.ContainsKey(state) ||
-                                !shortestPathsToFinalStates[state].ContainsKey(finalState) ||
-                                shortestPathsToFinalStates[state][finalState].Count > shortestPathsToFinalStates[curState][finalState].Count + 1)
-                            {
-                                // If not, initialize it
-                                if (!shortestPathsToFinalStates.ContainsKey(state))
-                                {
-                                    shortestPathsToFinalStates[state] = new Dictionary<int, List<int>>();
-                                }
-
-                                if (curState == finalState && !shortestPathsToFinalStates[curState].ContainsKey(finalState))
-                                {
-                                    shortestPathsToFinalStates[curState].Add(finalState, new List<int>(){curState});
-                                }
-
-                                // Copy the shortest path from the current state and append the current state
-                                List<int> newPath = new List<int>();
-                                newPath.Add(state);
-                                if (!shortestPathsToFinalStates[state].ContainsKey(finalState))
-                                {
-                                    shortestPathsToFinalStates[state].Add(finalState, new List<int>());
-                                }
-                                if (!shortestPathsToFinalStates[curState].ContainsKey(finalState))
-                                {
-                                    shortestPathsToFinalStates[curState].Add(finalState, new List<int>());
-                                }
-                                newPath.AddRange(shortestPathsToFinalStates[curState][finalState]);
-                                if (newPath.Last() != finalState)
-                                {
-                                    newPath.Add(finalState);
-                                }
-                                shortestPathsToFinalStates[state][finalState] = newPath;
-
-                                // Enqueue the neighbor state for further exploration
-                                queue.Enqueue(state);
-                            }
-                        }
-                    }
-                }
-                //Console.WriteLine("test " + finalState);
+                PerformBFS(finalState);
             }
         }
 
+        private void PerformBFS(int finalState)
+        {
+            HashSet<int> visited = new HashSet<int>();
+            Queue<int> queue = new Queue<int>();
+            queue.Enqueue(finalState);
+
+            while (queue.Count > 0)
+            {
+                int curState = queue.Dequeue();
+
+                foreach (var neighborState in delta.Keys)
+                {
+                    if (ShouldVisitState(neighborState, curState, visited))
+                    {
+                        visited.Add(neighborState);
+                        UpdateShortestPath(neighborState, curState, finalState);
+                        queue.Enqueue(neighborState);
+                    }
+                }
+            }
+        }
+
+        private bool ShouldVisitState(int state, int curState, HashSet<int> visited)
+        {
+            return delta[state].Select(x => x.TargetState).Contains(curState) && !visited.Contains(state);
+        }
+
+        private void UpdateShortestPath(int state, int curState, int finalState)
+        {
+            if (!shortestPathsToFinalStates.ContainsKey(state) ||
+                !shortestPathsToFinalStates[state].ContainsKey(finalState) ||
+                shortestPathsToFinalStates[state][finalState].Count > shortestPathsToFinalStates[curState][finalState].Count + 1)
+            {
+                UpdateShortestPathDictionary(state, curState, finalState);
+            }
+        }
+
+        private void UpdateShortestPathDictionary(int state, int curState, int finalState)
+        {
+            if (!shortestPathsToFinalStates.ContainsKey(state))
+            {
+                shortestPathsToFinalStates[state] = new Dictionary<int, List<int>>();
+            }
+
+            if (curState == finalState && !shortestPathsToFinalStates[curState].ContainsKey(finalState))
+            {
+                shortestPathsToFinalStates[curState].Add(finalState, new List<int>() { curState });
+            }
+
+            List<int> newPath = new List<int> { state };
+            InitializeShortestPathsForState(state, finalState);
+            InitializeShortestPathsForState(curState, finalState);
+            newPath.AddRange(shortestPathsToFinalStates[curState][finalState]);
+            if (newPath.Last() != finalState)
+            {
+                newPath.Add(finalState);
+            }
+            shortestPathsToFinalStates[state][finalState] = newPath;
+        }
+
+        private void InitializeShortestPathsForState(int state, int finalState)
+        {
+            if (!shortestPathsToFinalStates[state].ContainsKey(finalState))
+            {
+                shortestPathsToFinalStates[state].Add(finalState, new List<int>());
+            }
+        }
+        
         //Method to generate all possible edge pairs
         public List<(int startState, int middleState, int endState)> GetAllEdgePairs()
         {
@@ -5286,7 +5362,7 @@ namespace Microsoft.Automata
 
             return paths;
         }
-
+        
         private void DoAlmostMatching(List<int> path)
         {
             while (finalStateSet.Contains(path.Last()))
