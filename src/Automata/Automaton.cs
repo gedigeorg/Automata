@@ -5087,19 +5087,24 @@ namespace Microsoft.Automata
         }
 
 
+
         #region Test strings generation
 
-        private Dictionary<int, List<int>> shortestPathsFromInitialState = new Dictionary<int, List<int>>();
-        private Dictionary<int, Dictionary<int, List<int>>> shortestPathsToFinalStates = new Dictionary<int, Dictionary<int, List<int>>>();
+        private Dictionary<int, List<int>> _shortestPathsFromInitialState = new Dictionary<int, List<int>>();
+        private Dictionary<int, Dictionary<int, List<int>>> _shortestPathsToFinalStates = new Dictionary<int, Dictionary<int, List<int>>>();
 
-        // Method to compute shortest paths for all states
+        /// <summary>
+        /// Computes shortest paths for all states in the automaton.
+        /// </summary>
+        /// <param name="almostMatch">Indicates whether generated strings should nearly match the given regular expressions.</param>
+        /// <returns>An enumeration of shortest paths for all states.</returns>
         public IEnumerable<IEnumerable<T>> ComputeShortestPaths(bool almostMatch)
         {
-            shortestPathsFromInitialState[initialState] = new List<int> { initialState };
+            _shortestPathsFromInitialState[initialState] = new List<int> { initialState };
 
             foreach (var finalState in finalStateSet)
             {
-                shortestPathsToFinalStates[finalState] = new Dictionary<int, List<int>>();
+                _shortestPathsToFinalStates[finalState] = new Dictionary<int, List<int>>();
             }
 
             ComputeShortestPathsFromInitState();
@@ -5113,6 +5118,11 @@ namespace Microsoft.Automata
             return allPaths;
         }
 
+        /// <summary>
+        /// Extracts the paths from state indices to symbols based on the computed shortest paths.
+        /// </summary>
+        /// <param name="paths">List of lists of state indices representing paths.</param>
+        /// <returns>List of lists of symbols representing paths.</returns>
         private List<List<T>> GetAllPaths(List<List<int>> paths)
         {
             List<List<T>> allPaths = new List<List<T>>();
@@ -5134,7 +5144,9 @@ namespace Microsoft.Automata
             return allPaths;
         }
 
-        // Method to compute shortest paths from initial state
+        /// <summary>
+        /// Computes shortest paths from the initial state to all other states.
+        /// </summary>
         private void ComputeShortestPathsFromInitState()
         {
             Queue<int> queue = new Queue<int>();
@@ -5145,25 +5157,32 @@ namespace Microsoft.Automata
                 int curState = queue.Dequeue();
                 foreach (var nextState in delta[curState])
                 {
-                    if (!shortestPathsFromInitialState.ContainsKey(nextState.TargetState))
+                    if (!_shortestPathsFromInitialState.ContainsKey(nextState.TargetState))
                     {
-                        shortestPathsFromInitialState[nextState.TargetState] = new List<int>(shortestPathsFromInitialState[curState]);
-                        shortestPathsFromInitialState[nextState.TargetState].Add(nextState.TargetState);
+                        _shortestPathsFromInitialState[nextState.TargetState] = new List<int>(_shortestPathsFromInitialState[curState]);
+                        _shortestPathsFromInitialState[nextState.TargetState].Add(nextState.TargetState);
                         queue.Enqueue(nextState.TargetState);
                     }
                 }
             }
         }
 
+        /// <summary>
+        /// Computes shortest paths to all final states from all states.
+        /// </summary>
         private void ComputeShortestPathsToFinal()
         {
             foreach (int finalState in finalStateSet)
             {
-                shortestPathsToFinalStates[finalState] = new Dictionary<int, List<int>>();
+                _shortestPathsToFinalStates[finalState] = new Dictionary<int, List<int>>();
                 PerformBFS(finalState);
             }
         }
 
+        /// <summary>
+        /// Performs Breadth-First Search (BFS) traversal for computing shortest paths.
+        /// </summary>
+        /// <param name="finalState">The final state.</param>
         private void PerformBFS(int finalState)
         {
             HashSet<int> visited = new HashSet<int>();
@@ -5191,55 +5210,69 @@ namespace Microsoft.Automata
             return delta[state].Select(x => x.TargetState).Contains(curState) && !visited.Contains(state);
         }
 
+        /// <summary>
+        /// Updates the dictionary of shortest paths to a final state.
+        /// </summary>
+        /// <param name="state">The state to update paths for.</param>
+        /// <param name="curState">The current state in the computation.</param>
+        /// <param name="finalState">The final state.</param>
         private void UpdateShortestPath(int state, int curState, int finalState)
         {
-            if (!shortestPathsToFinalStates.ContainsKey(state) ||
-                !shortestPathsToFinalStates[state].ContainsKey(finalState) ||
-                shortestPathsToFinalStates[state][finalState].Count > shortestPathsToFinalStates[curState][finalState].Count + 1)
+            if (!_shortestPathsToFinalStates.ContainsKey(state) ||
+                !_shortestPathsToFinalStates[state].ContainsKey(finalState) ||
+                _shortestPathsToFinalStates[state][finalState].Count > _shortestPathsToFinalStates[curState][finalState].Count + 1)
             {
                 UpdateShortestPathDictionary(state, curState, finalState);
             }
         }
 
+        /// <summary>
+        /// Updates the dictionary of shortest paths to a final state for a specific state.
+        /// </summary>
+        /// <param name="state">The state to update paths for.</param>
+        /// <param name="curState">The current state in the computation.</param>
+        /// <param name="finalState">The final state.</param>
         private void UpdateShortestPathDictionary(int state, int curState, int finalState)
         {
-            if (!shortestPathsToFinalStates.ContainsKey(state))
+            if (!_shortestPathsToFinalStates.ContainsKey(state))
             {
-                shortestPathsToFinalStates[state] = new Dictionary<int, List<int>>();
+                _shortestPathsToFinalStates[state] = new Dictionary<int, List<int>>();
             }
 
-            if (curState == finalState && !shortestPathsToFinalStates[curState].ContainsKey(finalState))
+            if (curState == finalState && !_shortestPathsToFinalStates[curState].ContainsKey(finalState))
             {
-                shortestPathsToFinalStates[curState].Add(finalState, new List<int>() { curState });
+                _shortestPathsToFinalStates[curState].Add(finalState, new List<int>() { curState });
             }
 
             List<int> newPath = new List<int> { state };
             InitializeShortestPathsForState(state, finalState);
             InitializeShortestPathsForState(curState, finalState);
-            newPath.AddRange(shortestPathsToFinalStates[curState][finalState]);
+            newPath.AddRange(_shortestPathsToFinalStates[curState][finalState]);
             if (newPath.Last() != finalState)
             {
                 newPath.Add(finalState);
             }
-            shortestPathsToFinalStates[state][finalState] = newPath;
-        }
-
-        private void InitializeShortestPathsForState(int state, int finalState)
-        {
-            if (!shortestPathsToFinalStates[state].ContainsKey(finalState))
-            {
-                shortestPathsToFinalStates[state].Add(finalState, new List<int>());
-            }
+            _shortestPathsToFinalStates[state][finalState] = newPath;
         }
         
-        //Method to generate all possible edge pairs
+        private void InitializeShortestPathsForState(int state, int finalState)
+        {
+            if (!_shortestPathsToFinalStates[state].ContainsKey(finalState))
+            {
+                _shortestPathsToFinalStates[state].Add(finalState, new List<int>());
+            }
+        }
+
+        /// <summary>
+        /// Generates all possible edge pairs in the automaton.
+        /// </summary>
+        /// <returns>List of tuples representing all possible edge pairs.</returns>
         public List<(int startState, int middleState, int endState)> GetAllEdgePairs()
         {
             HashSet<(int, int, int)> edgePairs = new HashSet<(int, int, int)>();
 
             foreach (var sourceState in delta.Keys)
             {
-                //foreach (var targetState1 in statesWithNeighbors[sourceState])
                 foreach (var targetState1 in delta[sourceState])
                 {
                     foreach (var targetState2 in delta[targetState1.TargetState])
@@ -5252,6 +5285,11 @@ namespace Microsoft.Automata
             return edgePairs.ToList();
         }
 
+        /// <summary>
+        /// Generates paths through the automaton based on computed shortest paths.
+        /// </summary>
+        /// <param name="almostMatch">Indicates whether generated strings should nearly match the given regular expressions.</param>
+        /// <returns>List of lists of state indices representing generated paths.</returns>
         public List<List<int>> GeneratePaths(bool almostMatch)
         {
             var edgePairPool = GetAllEdgePairs();
@@ -5268,12 +5306,12 @@ namespace Microsoft.Automata
                 int middle = edgePair.Item2;
                 int end = edgePair.Item3;
 
-                foreach (var finalState in shortestPathsToFinalStates[end].Keys)
+                foreach (var finalState in _shortestPathsToFinalStates[end].Keys)
                 {
                     var path = new List<int>();
-                    path.AddRange(shortestPathsFromInitialState[start]);
+                    path.AddRange(_shortestPathsFromInitialState[start]);
                     path.Add(middle);
-                    path.AddRange(shortestPathsToFinalStates[end][finalState]);
+                    path.AddRange(_shortestPathsToFinalStates[end][finalState]);
 
                     if (almostMatch)
                     {
@@ -5291,7 +5329,11 @@ namespace Microsoft.Automata
 
             return paths;
         }
-        
+
+        /// <summary>
+        /// Adjusts generated paths for almost matching if specified.
+        /// </summary>
+        /// <param name="path">The path to adjust.</param>
         private void DoAlmostMatching(List<int> path)
         {
             while (finalStateSet.Contains(path.Last()))

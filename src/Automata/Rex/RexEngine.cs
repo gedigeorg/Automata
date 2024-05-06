@@ -110,7 +110,20 @@ namespace Microsoft.Automata.Rex
 
 
 
+        #region Test strings generation
 
+        /// <summary>
+        /// Generates a list of test strings that match the given regular expressions.
+        /// The generated strings are subject to specified constraints such as minimum and maximum length, and optional repetition.
+        /// </summary>
+        /// <param name="options">Regular expression options.</param>
+        /// <param name="almostMatch">Indicates whether generated strings should nearly match the given regular expressions.</param>
+        /// <param name="asteriskMinRepeat">Minimum repetition count for asterisk (*) in the regular expressions.</param>
+        /// <param name="asteriskMaxRepeat">Maximum repetition count for asterisk (*) in the regular expressions.</param>
+        /// <param name="minLength">Minimum length of the generated strings.</param>
+        /// <param name="maxLength">Maximum length of the generated strings.</param>
+        /// <param name="regexes">The regular expressions to match.</param>
+        /// <returns>A list of test strings that satisfy the specified constraints and match the given regular expressions.</returns>
         public List<string> GenerateTestStrings(RegexOptions options, bool almostMatch = false, int asteriskMinRepeat = 0, int asteriskMaxRepeat = 1, int minLength = 0, int maxLength = Int32.MaxValue, params string[] regexes)
         {
             RexEngine rexEngine = new RexEngine(BitWidth.BV16);
@@ -199,7 +212,7 @@ namespace Microsoft.Automata.Rex
             rexEngine.Solver.SaveAsDot(automaton, "x", "x");
         }
 
-
+        #endregion
 
 
 
