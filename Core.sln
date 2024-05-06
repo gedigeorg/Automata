@@ -7,7 +7,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Automata", "src\Automata\Au
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Automata.Tests", "src\Automata.Tests\Automata.Tests.csproj", "{D437274D-5BFD-42FD-BBE5-96C4C0FFBA05}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ConsoleApp1", "ConsoleApp1\ConsoleApp1.csproj", "{CFDCB6D2-EF4C-4A54-8CE5-4B838A0A83CC}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "StringGenAlgoConsole", "ConsoleApp1\StringGenAlgoConsole.csproj", "{CFDCB6D2-EF4C-4A54-8CE5-4B838A0A83CC}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

@@ -111,65 +111,18 @@ namespace Microsoft.Automata.Rex
 
 
 
-
-        public List<string> GenerateMembersReadable(RegexOptions options, int k, params string[] regexes)
+        public List<string> GenerateTestStrings(RegexOptions options, bool almostMatch = false, int asteriskMinRepeat = 0, int asteriskMaxRepeat = 1, int minLength = 0, int maxLength = Int32.MaxValue, params string[] regexes)
         {
             RexEngine rexEngine = new RexEngine(BitWidth.BV16);
-            var automaton = rexEngine.CreateFromRegexes(options, regexes);
-            var outputList = new List<string>();
-
-            for (int i = 0; i < k; i++)
-            {
-                var bdds = automaton.ChoosePathToSomeFinalState(new Chooser());
-                var bddsArr = bdds.ToArray();
-                List<char[]> chars = new List<char[]>();
-
-                foreach (var bdd in bddsArr)
-                {
-                    Tuple<uint, uint>[] ranges = bdd.ToRanges();
-
-                    foreach (var range in ranges)
-                    {
-                        char rangeStart = (char)range.Item1;
-                        char rangeEnd = (char)range.Item2;
-                        var charsToAdd = Enumerable.Range(rangeStart, rangeEnd - rangeStart + 1)
-                            .Select(c => (char)c)
-                            .ToArray();
-                        chars.Add(charsToAdd);
-                    }
-                }
-
-                StringBuilder memberBuilder = new StringBuilder();
-
-                foreach (var possibleMoves in chars)
-                {
-                    var readableChars = possibleMoves.Where(c => c >= 32 && c <= 127).ToList();
-                    if (readableChars.Any())
-                    {
-                        memberBuilder.Append(readableChars[new Random().Next(readableChars.Count)]);
-                    }
-                    else
-                    {
-                        memberBuilder.Append(possibleMoves[new Random().Next(possibleMoves.Length)]);
-                    }
-                }
-
-                outputList.Add(memberBuilder.ToString());
-            }
-
-            return outputList;
-        }
-
-        public List<string> GenerateTestStrings(RegexOptions options, List<int> repetitionsForAsterisks, bool almostMatch = false, int minLength = Int32.MinValue, int maxLength = Int32.MaxValue, params string[] regexes)
-        {
-            RexEngine rexEngine = new RexEngine(BitWidth.BV16);
-            var automaton = rexEngine.CreateFromRegexes(options, regexes);
+            var modifiedRegexes = regexes.Select(regex => regex.Replace("*", $"{{{asteriskMinRepeat},{asteriskMaxRepeat}}}")).ToArray();
+            var automaton = rexEngine.CreateFromRegexes(options, modifiedRegexes);
+            // NFA -> DFA
             automaton = automaton.Determinize();
             rexEngine.Solver.SaveAsDot(automaton, "x", "x");
 
             var outputList = new List<string>();
 
-            var bddsList = automaton.ComputeShortestPaths(repetitionsForAsterisks, almostMatch);
+            var bddsList = automaton.ComputeShortestPaths(almostMatch);
 
             List<List<char>> charsList = new List<List<char>>();
 
@@ -200,6 +153,13 @@ namespace Microsoft.Automata.Rex
                 charsList.Add(chars);
             }
 
+            GetMembers(minLength, maxLength, charsList, outputList);
+
+            return outputList;
+        }
+
+        private void GetMembers(int minLength, int maxLength, List<List<char>> charsList, List<string> outputList)
+        {
             foreach (var chars in charsList)
             {
                 var member = GetMember(chars);
@@ -209,8 +169,6 @@ namespace Microsoft.Automata.Rex
                     outputList.Add(member);
                 }
             }
-
-            return outputList;
         }
 
         private string GetMember(List<char> chars)
