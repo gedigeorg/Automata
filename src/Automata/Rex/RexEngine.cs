@@ -127,42 +127,56 @@ namespace Microsoft.Automata.Rex
         public List<string> GenerateTestStrings(RegexOptions options, bool almostMatch = false, int asteriskMinRepeat = 0, int asteriskMaxRepeat = 1, int minLength = 0, int maxLength = Int32.MaxValue, params string[] regexes)
         {
             RexEngine rexEngine = new RexEngine(BitWidth.BV16);
+            if (asteriskMinRepeat > asteriskMaxRepeat) asteriskMaxRepeat = asteriskMinRepeat;
             var modifiedRegexes = regexes.Select(regex => regex.Replace("*", $"{{{asteriskMinRepeat},{asteriskMaxRepeat}}}")).ToArray();
+
             var automaton = rexEngine.CreateFromRegexes(options, modifiedRegexes);
             // NFA -> DFA
             automaton = automaton.Determinize();
+            // automaton .dot format
             rexEngine.Solver.SaveAsDot(automaton, "x", "x");
 
             var outputList = new List<string>();
 
-            var bddsList = automaton.ComputeShortestPaths(almostMatch);
+            var statePairsList = automaton.ComputeShortestPaths(almostMatch);
 
             List<List<char>> charsList = new List<List<char>>();
 
-            foreach (var bdds in bddsList)
+            foreach (var statePairs in statePairsList)
             {
+                // one string generation
+                // statePairsList holds state pairs to find all moves merged range
                 List<char> chars = new List<char>();
-                foreach (var bdd in bdds.ToArray())
-                {
-                    if (bdd == null) continue;
 
-                    Tuple<uint, uint>[] ranges = bdd.ToRanges();
-                    var symbols = new List<char>();
-                    foreach (var range in ranges)
+                foreach (var statePair in statePairs)
+                {
+                    var moves = automaton.GetMovesBetweenTwoStates(statePair.Item1, statePair.Item2);
+                    moves.RemoveAll(x => x.IsEpsilon || x.Label == null);
+                    if (moves.Count < 1) continue;
+
+                    var symbols = new List<uint>();
+
+                    foreach (var move in moves)
                     {
-                        char rangeStart = (char)range.Item1;
-                        char rangeEnd = (char)range.Item2;
-                        var charsToAdd = Enumerable.Range(rangeStart, rangeEnd - rangeStart + 1)
-                            .Select(c => (char)c);
-                        symbols.AddRange(charsToAdd);
+                        if (move == null || move.IsEpsilon || move.Label == null) continue;
+
+                        Tuple<uint, uint>[] ranges = move.Label.ToRanges();
+                        // Storing numbers instead of characters for optimization
+                        foreach (var range in ranges)
+                        {
+                            uint rangeStart = range.Item1;
+                            uint rangeEnd = range.Item2;
+                            symbols.AddRange(Enumerable.Range((int)rangeStart, (int)(rangeEnd - rangeStart + 1)).Select(i => (uint)i));
+                        }
                     }
 
                     Random rand = new Random();
                     int randomIndex = rand.Next(0, symbols.Count);
-                    char randomChar = symbols[randomIndex];
+                    uint randomNumber = symbols[randomIndex];
 
-                    chars.Add(randomChar);
+                    chars.Add((char)randomNumber);
                 }
+
                 charsList.Add(chars);
             }
 

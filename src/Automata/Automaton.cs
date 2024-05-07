@@ -322,6 +322,11 @@ namespace Microsoft.Automata
             return deltaInv[state][0];
         }
 
+        public List<Move<T>> GetMovesBetweenTwoStates(int state, int targetState)
+        {
+            return delta[state].Where(x => x.TargetState == targetState).ToList();
+        }
+
         public bool InitialStateIsSource
         {
             get
@@ -5092,14 +5097,20 @@ namespace Microsoft.Automata
 
         private Dictionary<int, List<int>> _shortestPathsFromInitialState = new Dictionary<int, List<int>>();
         private Dictionary<int, Dictionary<int, List<int>>> _shortestPathsToFinalStates = new Dictionary<int, Dictionary<int, List<int>>>();
+        // state to state and their edges
+        // using different data structure for optimization purposes
+        private Dictionary<int, Dictionary<int, List<Move<T>>>> _deltaDictionary;
+
 
         /// <summary>
-        /// Computes shortest paths for all states in the automaton.
+        /// Computes the shortest paths from the initial state to all other states in the automaton.
         /// </summary>
         /// <param name="almostMatch">Indicates whether generated strings should nearly match the given regular expressions.</param>
-        /// <returns>An enumeration of shortest paths for all states.</returns>
-        public IEnumerable<IEnumerable<T>> ComputeShortestPaths(bool almostMatch)
+        /// <returns>An enumeration of shortest paths for all states represented as pairs of state indices.</returns>
+        public IEnumerable<IEnumerable<(int, int)>> ComputeShortestPaths(bool almostMatch)
         {
+            ConvertDeltaToDeltaDictionary();
+
             _shortestPathsFromInitialState[initialState] = new List<int> { initialState };
 
             foreach (var finalState in finalStateSet)
@@ -5119,26 +5130,59 @@ namespace Microsoft.Automata
         }
 
         /// <summary>
+        /// Converts the delta dictionary to deltaDictionary.
+        /// </summary>
+        private void ConvertDeltaToDeltaDictionary()
+        {
+            _deltaDictionary = new Dictionary<int, Dictionary<int, List<Move<T>>>>();
+
+            foreach (var state in delta.Keys)
+            {
+                var moves = delta[state];
+
+                // Create a new inner dictionary for the current state
+                var innerDict = new Dictionary<int, List<Move<T>>>();
+
+                foreach (var move in moves)
+                {
+                    int neighborState = move.TargetState;
+
+                    // If the neighbor state is not already in the inner dictionary, add it
+                    if (!innerDict.ContainsKey(neighborState))
+                    {
+                        innerDict[neighborState] = new List<Move<T>>();
+                    }
+
+                    // Add the move to the list at the neighbor state
+                    innerDict[neighborState].Add(move);
+                }
+
+                // Add the inner dictionary to the deltaDictionary for the current state
+                _deltaDictionary[state] = innerDict;
+            }
+        }
+
+
+        /// <summary>
         /// Extracts the paths from state indices to symbols based on the computed shortest paths.
         /// </summary>
         /// <param name="paths">List of lists of state indices representing paths.</param>
-        /// <returns>List of lists of symbols representing paths.</returns>
-        private List<List<T>> GetAllPaths(List<List<int>> paths)
+        /// <returns>List of lists of state index pairs representing transitions along the paths.</returns>
+        private List<List<(int, int)>> GetAllPaths(List<List<int>> paths)
         {
-            List<List<T>> allPaths = new List<List<T>>();
+            List<List<(int, int)>> allPaths = new List<List<(int, int)>>();
 
             foreach (var path in paths)
             {
-                List<T> currentPath = new List<T>();
+                List<(int, int)> currentPath = new List<(int, int)>();
                 for (int i = 0; i < path.Count - 1; i++)
                 {
                     var currState = path[i];
                     var nextState = path[i + 1];
-                    var t = delta[currState].First(x => x.TargetState == nextState);
-                    currentPath.Add(t.Label);
+                    currentPath.Add((currState, nextState));
                 }
 
-                allPaths.Add(new List<T>(currentPath));
+                allPaths.Add(new List<(int, int)>(currentPath));
             }
 
             return allPaths;
@@ -5155,13 +5199,14 @@ namespace Microsoft.Automata
             while (queue.Count > 0)
             {
                 int curState = queue.Dequeue();
-                foreach (var nextState in delta[curState])
+                
+                foreach (var nextState in _deltaDictionary[curState])
                 {
-                    if (!_shortestPathsFromInitialState.ContainsKey(nextState.TargetState))
+                    if (!_shortestPathsFromInitialState.ContainsKey(nextState.Key))
                     {
-                        _shortestPathsFromInitialState[nextState.TargetState] = new List<int>(_shortestPathsFromInitialState[curState]);
-                        _shortestPathsFromInitialState[nextState.TargetState].Add(nextState.TargetState);
-                        queue.Enqueue(nextState.TargetState);
+                        _shortestPathsFromInitialState[nextState.Key] = new List<int>(_shortestPathsFromInitialState[curState]);
+                        _shortestPathsFromInitialState[nextState.Key].Add(nextState.Key);
+                        queue.Enqueue(nextState.Key);
                     }
                 }
             }
@@ -5192,8 +5237,8 @@ namespace Microsoft.Automata
             while (queue.Count > 0)
             {
                 int curState = queue.Dequeue();
-
-                foreach (var neighborState in delta.Keys)
+                
+                foreach (var neighborState in _deltaDictionary.Keys)
                 {
                     if (ShouldVisitState(neighborState, curState, visited))
                     {
@@ -5207,7 +5252,7 @@ namespace Microsoft.Automata
 
         private bool ShouldVisitState(int state, int curState, HashSet<int> visited)
         {
-            return delta[state].Select(x => x.TargetState).Contains(curState) && !visited.Contains(state);
+            return _deltaDictionary[state].ContainsKey(curState) && !visited.Contains(state);
         }
 
         /// <summary>
@@ -5270,7 +5315,7 @@ namespace Microsoft.Automata
         public List<(int startState, int middleState, int endState)> GetAllEdgePairs()
         {
             HashSet<(int, int, int)> edgePairs = new HashSet<(int, int, int)>();
-
+            
             foreach (var sourceState in delta.Keys)
             {
                 foreach (var targetState1 in delta[sourceState])
@@ -5297,6 +5342,8 @@ namespace Microsoft.Automata
             List<List<int>> paths = new List<List<int>>();
 
             Random rand = new Random();
+
+            FindInitStateToFinalStatePairs(almostMatch, paths);
 
             while (edgePairPool.Count > 0)
             {
@@ -5330,6 +5377,27 @@ namespace Microsoft.Automata
             return paths;
         }
 
+        private void FindInitStateToFinalStatePairs(bool almostMatch, List<List<int>> paths)
+        {
+            // Check for transitions from initial state to final state
+            foreach (var finalState in finalStateSet)
+            {
+                if (_deltaDictionary.ContainsKey(initialState) &&
+                    _deltaDictionary[initialState].ContainsKey(finalState))
+                {
+                    // If there is a direct transition from initial to final state
+                    // Create a path directly from initial to final state
+                    var path = new List<int> {initialState, finalState};
+                    if (almostMatch)
+                    {
+                        DoAlmostMatching(path);
+                    }
+
+                    paths.Add(path);
+                }
+            }
+        }
+
         /// <summary>
         /// Adjusts generated paths for almost matching if specified.
         /// </summary>
@@ -5341,7 +5409,7 @@ namespace Microsoft.Automata
                 var last = path.Count - 1;
                 var removedFinalState = path[last];
                 path.RemoveAt(last);
-
+                
                 if (delta[path.Last()].Any(move => move.IsEpsilon && move.TargetState == removedFinalState))
                 {
                     for (int i = path.Count - 1; i >= 0; i--)
