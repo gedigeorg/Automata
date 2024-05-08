@@ -5160,32 +5160,6 @@ namespace Microsoft.Automata
             }
         }
 
-
-        /// <summary>
-        /// Extracts the paths from state indices to symbols based on the computed shortest paths.
-        /// </summary>
-        /// <param name="paths">List of lists of state indices representing paths.</param>
-        /// <returns>List of lists of state index pairs representing transitions along the paths.</returns>
-        private List<List<(int, int)>> GetAllPaths(List<List<int>> paths)
-        {
-            List<List<(int, int)>> allPaths = new List<List<(int, int)>>();
-
-            foreach (var path in paths)
-            {
-                List<(int, int)> currentPath = new List<(int, int)>();
-                for (int i = 0; i < path.Count - 1; i++)
-                {
-                    var currState = path[i];
-                    var nextState = path[i + 1];
-                    currentPath.Add((currState, nextState));
-                }
-
-                allPaths.Add(new List<(int, int)>(currentPath));
-            }
-
-            return allPaths;
-        }
-
         /// <summary>
         /// Computes shortest paths from the initial state to all other states.
         /// </summary>
@@ -5374,7 +5348,29 @@ namespace Microsoft.Automata
                 //Console.WriteLine("edge pair: " + edgePair.Item1 + ", " + edgePair.Item2 + ", " + edgePair.Item3);
             }
 
-            var allPaths = GetAllPaths(paths);
+            var allPaths = GetPathsAsStatePairs(paths);
+
+            return allPaths;
+        }
+
+        /// <param name="paths">List of lists of state indices representing paths.</param>
+        /// <returns>List of lists of state index pairs representing transitions along the paths.</returns>
+        private List<List<(int, int)>> GetPathsAsStatePairs(List<List<int>> paths)
+        {
+            List<List<(int, int)>> allPaths = new List<List<(int, int)>>();
+
+            foreach (var path in paths)
+            {
+                List<(int, int)> currentPath = new List<(int, int)>();
+                for (int i = 0; i < path.Count - 1; i++)
+                {
+                    var currState = path[i];
+                    var nextState = path[i + 1];
+                    currentPath.Add((currState, nextState));
+                }
+
+                allPaths.Add(new List<(int, int)>(currentPath));
+            }
 
             return allPaths;
         }
