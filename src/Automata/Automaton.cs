@@ -5124,9 +5124,7 @@ namespace Microsoft.Automata
 
             var paths = GeneratePaths(almostMatch);
 
-            var allPaths = GetAllPaths(paths);
-
-            return allPaths;
+            return paths;
         }
 
         /// <summary>
@@ -5221,6 +5219,7 @@ namespace Microsoft.Automata
             {
                 _shortestPathsToFinalStates[finalState] = new Dictionary<int, List<int>>();
                 PerformBFS(finalState);
+                //Console.WriteLine("final state nr: " + finalState);
             }
         }
 
@@ -5335,7 +5334,7 @@ namespace Microsoft.Automata
         /// </summary>
         /// <param name="almostMatch">Indicates whether generated strings should nearly match the given regular expressions.</param>
         /// <returns>List of lists of state indices representing generated paths.</returns>
-        public List<List<int>> GeneratePaths(bool almostMatch)
+        public List<List<(int, int)>> GeneratePaths(bool almostMatch)
         {
             var edgePairPool = GetAllEdgePairs();
 
@@ -5372,9 +5371,12 @@ namespace Microsoft.Automata
                 }
 
                 edgePairPool.Remove(edgePair);
+                //Console.WriteLine("edge pair: " + edgePair.Item1 + ", " + edgePair.Item2 + ", " + edgePair.Item3);
             }
 
-            return paths;
+            var allPaths = GetAllPaths(paths);
+
+            return allPaths;
         }
 
         private void FindInitStateToFinalStatePairs(bool almostMatch, List<List<int>> paths)
