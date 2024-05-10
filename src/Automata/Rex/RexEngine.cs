@@ -171,10 +171,21 @@ namespace Microsoft.Automata.Rex
                     }
 
                     Random rand = new Random();
-                    int randomIndex = rand.Next(0, symbols.Count);
-                    uint randomNumber = symbols[randomIndex];
+                    
+                    var readableSymbols = symbols.Where(x => x >= 32 && x <= 127);
 
-                    chars.Add((char)randomNumber);
+                    if (readableSymbols.Any())
+                    {
+                        int randomIndex = rand.Next(0, readableSymbols.Count());
+                        uint randomChar = readableSymbols.ElementAt(randomIndex);
+                        chars.Add((char)randomChar);
+                    }
+                    else
+                    {
+                        int randomIndex = rand.Next(0, symbols.Count);
+                        uint randomChar = symbols[randomIndex];
+                        chars.Add((char)randomChar);
+                    }
                 }
 
                 charsList.Add(chars);
@@ -189,41 +200,20 @@ namespace Microsoft.Automata.Rex
         {
             foreach (var chars in charsList)
             {
-                var member = GetMember(chars);
+                StringBuilder memberBuilder = new StringBuilder();
 
-                if (member.Length >= minLength && member.Length <= maxLength && member != String.Empty && member != "")
+                foreach (var possibleMoves in chars)
+                {
+                    memberBuilder.Append(possibleMoves);
+                }
+
+                string member = memberBuilder.ToString();
+
+                if (!string.IsNullOrEmpty(member) && member.Length >= minLength && member.Length <= maxLength)
                 {
                     outputList.Add(member);
                 }
             }
-        }
-
-        private string GetMember(List<char> chars)
-        {
-            var member = String.Empty;
-            foreach (var possibleMoves in chars)
-            {
-                StringBuilder memberBuilder = new StringBuilder();
-                if (possibleMoves >= 32 && possibleMoves <= 127)
-                {
-                    memberBuilder.Append(possibleMoves);
-                }
-                else
-                {
-                    memberBuilder.Append(possibleMoves);
-                }
-
-                member += memberBuilder.ToString();
-            }
-
-            return member;
-        }
-
-        public void Visualize(RegexOptions options, params string[] regexes)
-        {
-            RexEngine rexEngine = new RexEngine(BitWidth.BV16);
-            var automaton = rexEngine.CreateFromRegexes(options, regexes);
-            rexEngine.Solver.SaveAsDot(automaton, "x", "x");
         }
 
         #endregion

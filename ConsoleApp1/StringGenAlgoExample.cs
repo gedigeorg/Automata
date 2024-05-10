@@ -50,7 +50,10 @@ namespace StringGenAlgoConsole
                 //"^[a-g]{1,2}x?$"
                 //"^x*$"
 
-                //"^x(xyzt(r)*)*z?$"
+                //"^x(1234(T)*)*z?$"
+                //"^(1234(T)*)*$"
+                //"^(X(y)*)*$"
+
                 //"^(ax|bx|bzx)$"
                 
                 //"^a((x*)y*)*$"
@@ -75,6 +78,7 @@ namespace StringGenAlgoConsole
                 //"^ab(.*cdefgh)[xi]$"
                 //"^ab(.*cdefghx|.*cdefghij)$"
                 //"^ab(.*x|.*i)$"
+                "^a.*(x|y)$"
                 //"^ab(x|i)$"
                 //"^a(xy){90,100}$"
                 //"^a(x{0,2}|y{0,3})$"
@@ -82,26 +86,30 @@ namespace StringGenAlgoConsole
                 // took time but generated
                 //"^a{0,1000}$"
 
-                //"^a(xy){0,2}b$"
+                //"^a(x){0,2}b$"
                 //"^.{0,2}(Tom|Sawyer|Huckleberry|Finn)\\z$"
                 //"^a(xy)*$"
                 
-                //"^ab(.*cdefghx|.*cdefghi)$"
+                //"^ab(.*cx|.*ci)$"
                 //"^ab(cx|cy)$"
                 //"^ab(cx|cy)*$"
-                "^ab(cx|cy)*$"
+                //"^ab(cx|cy)*$"
+                //@"^.{2,4}Tom|Sawyer|Huckleberry|Finn$"
+                //"^a(x){0,2}b$"
+
+                //"^A(?:B|C(?:(?:D|E)+F)+)+G$"
             };
 
             Console.WriteLine("Test algo:");
             //var sample = rexEngine.GenerateTestStrings(options, false, 1, 5, 3, 6, regexes: regexes);
             //var sample = rexEngine.GenerateTestStrings(options, true, asteriskMaxRepeat:5, minLength:6, maxLength:10, regexes: regexes);
-            var sample = rexEngine.GenerateTestStrings(options, regexes: regexes);
+            var sample = rexEngine.GenerateTestStrings(options, asteriskMaxRepeat: 2, regexes: regexes);
             Console.WriteLine();
             foreach (var s in sample)
             {
                 Console.WriteLine(s);
-                Console.WriteLine(Regex.IsMatch(s, regexes[0]));
-                Console.WriteLine();
+                //Console.WriteLine(Regex.IsMatch(s, regexes[0]));
+                //Console.WriteLine();
             }
 
 
