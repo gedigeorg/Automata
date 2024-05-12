@@ -78,7 +78,7 @@ namespace StringGenAlgoConsole
                 //"^ab(.*cdefgh)[xi]$"
                 //"^ab(.*cdefghx|.*cdefghij)$"
                 //"^ab(.*x|.*i)$"
-                "^a.*(x|y)$"
+                //"^a.*(x|y)$"
                 //"^ab(x|i)$"
                 //"^a(xy){90,100}$"
                 //"^a(x{0,2}|y{0,3})$"
@@ -87,23 +87,34 @@ namespace StringGenAlgoConsole
                 //"^a{0,1000}$"
 
                 //"^a(x){0,2}b$"
-                //"^.{0,2}(Tom|Sawyer|Huckleberry|Finn)\\z$"
                 //"^a(xy)*$"
                 
                 //"^ab(.*cx|.*ci)$"
-                //"^ab(cx|cy)$"
-                //"^ab(cx|cy)*$"
                 //"^ab(cx|cy)*$"
                 //@"^.{2,4}Tom|Sawyer|Huckleberry|Finn$"
                 //"^a(x){0,2}b$"
 
                 //"^A(?:B|C(?:(?:D|E)+F)+)+G$"
+
+                //@"^$"
+                //@"^\w+([-+.]\w+)*@\w+([-.]\w+)*\.\w+([-.]\w+)*([,;]\s*\w+([-+.]\w+)*@\w+([-.]\w+)*\.\w+([-.]\w+)*)*$"
+                //@"^([A-Z]{2}|[a-z]{2} \d{2} [A-Z]{1,2}|[a-z]{1,2} \d{1,4})?([A-Z]{3}|[a-z]{3} \d{1,4})?$"
+                //@"^[A-Za-z0-9](([ \.\-]?[a-zA-Z0-9]+)*)@([A-Za-z0-9]+)(([\.\-]?[a-zA-Z0-9]+)*)\. ([A-Za-z][A-Za-z]+)$"
+                //@"^(\w|-)+@((\w|-)+\.)+(\w|-)+$"
+                //@"^[+-]?([0-9]*\.?[0-9]+|[0-9]+\.?[0-9]*)([eE][+-]?[0-9]+)?$"
+                //@"^((\w|\d|\-|\.)+)@{1}(((\w|\d|\-){1,67})|((\w|\d|\-)+\.(\w|\d|\-){1,67}))\.((([a-z]|[A-Z]|\d){2,4})(\.([a-z]|[AZ]|\d){2})?)$"
+                //@"^(([A-Za-z0-9]+ +)|([A-Za-z0-9]+\-+)|([A-Za-z0-9]+\.+)|([A-Za-z0-9]+\++))*[A-Za-z0-9]+@((\w+\-+)|(\w+\.))*\w{1,63}\.[a - zA - Z]{2,6}$"
+                //@"^((\w+([-+.]\w+)*@\w+([-.]\w+)*\.\w+([-.]\w+)*)\s*[,]{0,1}\s*)+$"
+                
+                //@"^((X*)y*)*$"
+                @"^(X(y)*)*$"
             };
 
             Console.WriteLine("Test algo:");
             //var sample = rexEngine.GenerateTestStrings(options, false, 1, 5, 3, 6, regexes: regexes);
             //var sample = rexEngine.GenerateTestStrings(options, true, asteriskMaxRepeat:5, minLength:6, maxLength:10, regexes: regexes);
-            var sample = rexEngine.GenerateTestStrings(options, asteriskMaxRepeat: 2, regexes: regexes);
+            //var sample = rexEngine.GenerateTestStrings(options, asteriskMaxRepeat: 4, regexes: regexes);
+            var sample = rexEngine.GenerateTestStrings(RegexOptions.None, minLength: 15, maxLength: 16, asteriskMaxRepeat: 5, regexes: regexes);
             Console.WriteLine();
             foreach (var s in sample)
             {
@@ -111,14 +122,6 @@ namespace StringGenAlgoConsole
                 //Console.WriteLine(Regex.IsMatch(s, regexes[0]));
                 //Console.WriteLine();
             }
-
-
-            //TODO:
-
-            // testi keerukamaid regexeid ja pane kirja!
-            // testi ka pikamat, case pika stringi genereerimiseks, 10k olekut
-            // testi peaaegu matchi erinavad regexid
-
 
         }
     }

@@ -931,5 +931,71 @@ namespace Automata.Tests
             //solver.ShowGraph(fat2, "fat2");
             Assert.IsTrue(fat1.IsEquivalentWith(fat2));
         }
+
+        [TestMethod]
+        public void TestGenerateStringsFromRegexNum()
+        {
+            var rex = new Microsoft.Automata.Rex.RexEngine(BitWidth.BV16);
+            var regexes = new string[] { @"^(X(y)*)*$" };
+            var sample = rex.GenerateTestStrings(RegexOptions.None, asteriskMaxRepeat: 4, regexes: regexes);
+            Assert.AreEqual(sample.Count, 200);
+            foreach (var s in sample)
+            {
+                if (!Microsoft.Automata.Rex.RexEngine.IsMatch(s, regexes[0], RegexOptions.None))
+                    Assert.IsTrue(false, "regex " + regexes[0] + " failed");
+            }
+        }
+
+        [TestMethod]
+        public void TestGenerateStringsFromRegexAsterisk()
+        {
+            var rex = new Microsoft.Automata.Rex.RexEngine(BitWidth.BV16);
+            var regexes = new string[] { @"^(X(y)*)*$" };
+            var sample1 = rex.GenerateTestStrings(RegexOptions.None, asteriskMinRepeat: 1, asteriskMaxRepeat: 3, regexes: regexes);
+            Assert.IsTrue(sample1.Contains("XyyXyXyyy"));
+            Assert.AreEqual(sample1.Count, 27);
+            foreach (var s in sample1)
+            {
+                if (!Microsoft.Automata.Rex.RexEngine.IsMatch(s, regexes[0], RegexOptions.None))
+                    Assert.IsTrue(false, "regex " + regexes[0] + " failed");
+            }
+            var sample2 = rex.GenerateTestStrings(RegexOptions.None, asteriskMinRepeat: 4, asteriskMaxRepeat: 5, regexes: regexes);
+            Assert.IsTrue(sample2.Contains("XyyyyXyyyyXyyyyyXyyyyXyyyyy"));
+            Assert.AreEqual(sample2.Count, 18);
+            foreach (var s in sample2)
+            {
+                if (!Microsoft.Automata.Rex.RexEngine.IsMatch(s, regexes[0], RegexOptions.None))
+                    Assert.IsTrue(false, "regex " + regexes[0] + " failed");
+            }
+        }
+
+        [TestMethod]
+        public void TestGenerateStringsFromRegexLength()
+        {
+            var rex = new Microsoft.Automata.Rex.RexEngine(BitWidth.BV16);
+            var regexes = new string[] { @"^(X(y)*)*$" };
+            var sample = rex.GenerateTestStrings(RegexOptions.None, minLength: 15, maxLength: 16, asteriskMaxRepeat: 5, regexes: regexes);
+            Assert.AreEqual(sample.Count, 15);
+            Assert.IsTrue(sample.Contains("XXyyyyyXyXXyyyyy"));
+            foreach (var s in sample)
+            {
+                if (!Microsoft.Automata.Rex.RexEngine.IsMatch(s, regexes[0], RegexOptions.None))
+                    Assert.IsTrue(false, "regex " + regexes[0] + " failed");
+            }
+        }
+
+        [TestMethod]
+        public void TestGenerateStringsFromRegexAlmostMatch()
+        {
+            var rex = new Microsoft.Automata.Rex.RexEngine(BitWidth.BV16);
+            var regexes = new string[] { "^A(?:B|C(?:(?:D|E)+F)+)+G$" };
+            var sample = rex.GenerateTestStrings(RegexOptions.None, almostMatch: true, regexes: regexes);
+            foreach (var s in sample)
+            {
+                if (Microsoft.Automata.Rex.RexEngine.IsMatch(s, regexes[0], RegexOptions.None))
+                    Assert.IsTrue(false, "regex " + regexes[0] + " almost match failed");
+            }
+        }
+
     }
 }

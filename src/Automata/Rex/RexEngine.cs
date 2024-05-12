@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -129,6 +130,7 @@ namespace Microsoft.Automata.Rex
             RexEngine rexEngine = new RexEngine(BitWidth.BV16);
             if (asteriskMinRepeat > asteriskMaxRepeat) asteriskMaxRepeat = asteriskMinRepeat;
             var modifiedRegexes = regexes.Select(regex => regex.Replace("*", $"{{{asteriskMinRepeat},{asteriskMaxRepeat}}}")).ToArray();
+            modifiedRegexes = modifiedRegexes.Select(regex => regex.Replace("+", $"{{{asteriskMinRepeat},{asteriskMaxRepeat}}}")).ToArray();
 
             var automaton = rexEngine.CreateFromRegexes(options, modifiedRegexes);
             // NFA -> DFA
@@ -137,6 +139,12 @@ namespace Microsoft.Automata.Rex
             rexEngine.Solver.SaveAsDot(automaton, "x", "x");
 
             var outputList = new List<string>();
+
+            Stopwatch stopwatch = new Stopwatch();
+            Console.WriteLine("Starting the stopwatch...");
+            stopwatch.Start();
+            // Simulate some operation
+            ///////////////
 
             var statePairsList = automaton.ComputeShortestPaths(almostMatch);
 
@@ -171,7 +179,7 @@ namespace Microsoft.Automata.Rex
                     }
 
                     Random rand = new Random();
-                    
+
                     var readableSymbols = symbols.Where(x => x >= 32 && x <= 127);
 
                     if (readableSymbols.Any())
@@ -192,6 +200,11 @@ namespace Microsoft.Automata.Rex
             }
 
             GetMembers(minLength, maxLength, charsList, outputList);
+
+            ///////////////
+            stopwatch.Stop();
+            Console.WriteLine("Elapsed time: " + stopwatch.Elapsed);
+
 
             return outputList;
         }

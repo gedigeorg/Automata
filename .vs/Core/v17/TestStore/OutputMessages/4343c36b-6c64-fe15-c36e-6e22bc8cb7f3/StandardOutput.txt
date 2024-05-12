@@ -1,0 +1,95 @@
+digraph "x" {
+rankdir=LR; fontsize=12;
+
+//Initial state
+preInit [style = filled, shape = plaintext, color = black, fillcolor = white, label = "x: "]
+//Final states
+1 [style = filled, shape = circle, fillcolor = white, fontsize = 12, peripheries=2]
+2 [style = filled, shape = circle, fillcolor = white, fontsize = 12, peripheries=2]
+4 [style = filled, shape = circle, fillcolor = white, fontsize = 12, peripheries=2]
+120 [style = filled, shape = circle, fillcolor = white, fontsize = 12, peripheries=2]
+1920 [style = filled, shape = circle, fillcolor = white, fontsize = 12, peripheries=2]
+69273600 [style = filled, shape = circle, fillcolor = white, fontsize = 12, peripheries=2]
+112 [style = filled, shape = circle, fillcolor = white, fontsize = 12, peripheries=2]
+2078208000 [style = filled, shape = circle, fillcolor = white, fontsize = 12, peripheries=2]
+69271552 [style = filled, shape = circle, fillcolor = white, fontsize = 12, peripheries=2]
+48 [style = filled, shape = circle, fillcolor = white, fontsize = 12, peripheries=2]
+2078146560 [style = filled, shape = circle, fillcolor = white, fontsize = 12, peripheries=2]
+69206016 [style = filled, shape = circle, fillcolor = white, fontsize = 12, peripheries=2]
+16 [style = filled, shape = circle, fillcolor = white, fontsize = 12, peripheries=2]
+2076180480 [style = filled, shape = circle, fillcolor = white, fontsize = 12, peripheries=2]
+67108864 [style = filled, shape = circle, fillcolor = white, fontsize = 12, peripheries=2]
+2013265920 [style = filled, shape = circle, fillcolor = white, fontsize = 12, peripheries=2]
+1879048192 [style = filled, shape = circle, fillcolor = white, fontsize = 12, peripheries=2]
+805306368 [style = filled, shape = circle, fillcolor = white, fontsize = 12, peripheries=2]
+268435456 [style = filled, shape = circle, fillcolor = white, fontsize = 12, peripheries=2]
+1937768448 [style = filled, shape = circle, fillcolor = white, fontsize = 12, peripheries=2]
+830472192 [style = filled, shape = circle, fillcolor = white, fontsize = 12, peripheries=2]
+276824064 [style = filled, shape = circle, fillcolor = white, fontsize = 12, peripheries=2]
+1939603456 [style = filled, shape = circle, fillcolor = white, fontsize = 12, peripheries=2]
+831258624 [style = filled, shape = circle, fillcolor = white, fontsize = 12, peripheries=2]
+277086208 [style = filled, shape = circle, fillcolor = white, fontsize = 12, peripheries=2]
+1939660800 [style = filled, shape = circle, fillcolor = white, fontsize = 12, peripheries=2]
+831283200 [style = filled, shape = circle, fillcolor = white, fontsize = 12, peripheries=2]
+277094400 [style = filled, shape = circle, fillcolor = white, fontsize = 12, peripheries=2]
+1792 [style = filled, shape = circle, fillcolor = white, fontsize = 12, peripheries=2]
+768 [style = filled, shape = circle, fillcolor = white, fontsize = 12, peripheries=2]
+256 [style = filled, shape = circle, fillcolor = white, fontsize = 12, peripheries=2]
+
+//Other states
+
+//Transitions
+preInit -> 1
+1 -> 2 [label = "X", fontsize = 12 ];
+2 -> 4 [label = "y", fontsize = 12 ];
+2 -> 120 [label = "X", fontsize = 12 ];
+4 -> 1920 [label = "y", fontsize = 12 ];
+4 -> 120 [label = "X", fontsize = 12 ];
+120 -> 69273600 [label = "y", fontsize = 12 ];
+120 -> 112 [label = "X", fontsize = 12 ];
+1920 -> 120 [label = "X", fontsize = 12 ];
+1920 -> 1792 [label = "y", fontsize = 12 ];
+69273600 -> 2078208000 [label = "y", fontsize = 12 ];
+69273600 -> 112 [label = "X", fontsize = 12 ];
+112 -> 69271552 [label = "y", fontsize = 12 ];
+112 -> 48 [label = "X", fontsize = 12 ];
+2078208000 -> 112 [label = "X", fontsize = 12 ];
+2078208000 -> 1939660800 [label = "y", fontsize = 12 ];
+69271552 -> 2078146560 [label = "y", fontsize = 12 ];
+69271552 -> 48 [label = "X", fontsize = 12 ];
+48 -> 69206016 [label = "y", fontsize = 12 ];
+48 -> 16 [label = "X", fontsize = 12 ];
+2078146560 -> 48 [label = "X", fontsize = 12 ];
+2078146560 -> 1939603456 [label = "y", fontsize = 12 ];
+69206016 -> 2076180480 [label = "y", fontsize = 12 ];
+69206016 -> 16 [label = "X", fontsize = 12 ];
+16 -> 67108864 [label = "y", fontsize = 12 ];
+2076180480 -> 16 [label = "X", fontsize = 12 ];
+2076180480 -> 1937768448 [label = "y", fontsize = 12 ];
+67108864 -> 2013265920 [label = "y", fontsize = 12 ];
+2013265920 -> 1879048192 [label = "y", fontsize = 12 ];
+1879048192 -> 805306368 [label = "y", fontsize = 12 ];
+805306368 -> 268435456 [label = "y", fontsize = 12 ];
+1937768448 -> 16 [label = "X", fontsize = 12 ];
+1937768448 -> 830472192 [label = "y", fontsize = 12 ];
+830472192 -> 16 [label = "X", fontsize = 12 ];
+830472192 -> 276824064 [label = "y", fontsize = 12 ];
+276824064 -> 16 [label = "X", fontsize = 12 ];
+1939603456 -> 48 [label = "X", fontsize = 12 ];
+1939603456 -> 831258624 [label = "y", fontsize = 12 ];
+831258624 -> 48 [label = "X", fontsize = 12 ];
+831258624 -> 277086208 [label = "y", fontsize = 12 ];
+277086208 -> 48 [label = "X", fontsize = 12 ];
+1939660800 -> 112 [label = "X", fontsize = 12 ];
+1939660800 -> 831283200 [label = "y", fontsize = 12 ];
+831283200 -> 112 [label = "X", fontsize = 12 ];
+831283200 -> 277094400 [label = "y", fontsize = 12 ];
+277094400 -> 112 [label = "X", fontsize = 12 ];
+1792 -> 120 [label = "X", fontsize = 12 ];
+1792 -> 768 [label = "y", fontsize = 12 ];
+768 -> 120 [label = "X", fontsize = 12 ];
+768 -> 256 [label = "y", fontsize = 12 ];
+256 -> 120 [label = "X", fontsize = 12 ];
+}
+Starting the stopwatch...
+Elapsed time: 00:00:00.0706102
