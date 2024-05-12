@@ -130,9 +130,11 @@ namespace Microsoft.Automata.Rex
             RexEngine rexEngine = new RexEngine(BitWidth.BV16);
             if (asteriskMinRepeat > asteriskMaxRepeat) asteriskMaxRepeat = asteriskMinRepeat;
             var modifiedRegexes = regexes.Select(regex => regex.Replace("*", $"{{{asteriskMinRepeat},{asteriskMaxRepeat}}}")).ToArray();
-            modifiedRegexes = modifiedRegexes.Select(regex => regex.Replace("+", $"{{{asteriskMinRepeat},{asteriskMaxRepeat}}}")).ToArray();
+            modifiedRegexes = modifiedRegexes.Select(regex => regex.Replace("+", $"{{{(asteriskMinRepeat != 0 ? asteriskMinRepeat : 1)},{asteriskMaxRepeat}}}")).ToArray();
 
             var automaton = rexEngine.CreateFromRegexes(options, modifiedRegexes);
+            //var automaton = rexEngine.CreateFromRegexes(options, regexes);
+
             // NFA -> DFA
             automaton = automaton.Determinize();
             // automaton .dot format
