@@ -151,9 +151,11 @@ namespace Microsoft.Automata.Rex
             var statePairsList = automaton.ComputeShortestPaths(almostMatch);
 
             List<List<char>> charsList = new List<List<char>>();
+            var count = 0;
 
             foreach (var statePairs in statePairsList)
             {
+                count++;
                 // one string generation
                 // statePairsList holds state pairs to find all moves merged range
                 List<char> chars = new List<char>();
@@ -199,6 +201,7 @@ namespace Microsoft.Automata.Rex
                 }
 
                 charsList.Add(chars);
+                Console.WriteLine("path: " + count);
             }
 
             GetMembers(minLength, maxLength, charsList, outputList);

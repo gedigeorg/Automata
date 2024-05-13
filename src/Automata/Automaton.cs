@@ -5124,7 +5124,27 @@ namespace Microsoft.Automata
 
             var paths = GeneratePaths(almostMatch);
 
-            return paths;
+            List<List<(int, int)>> resultData = RemoveDuplicateSublists(paths);
+
+            return resultData;
+        }
+
+        static List<List<(int, int)>> RemoveDuplicateSublists(List<List<(int, int)>> data)
+        {
+            HashSet<string> seen = new HashSet<string>();
+            List<List<(int, int)>> result = new List<List<(int, int)>>();
+
+            foreach (var sublist in data)
+            {
+                string sublistKey = string.Join(",", sublist.Select(x => $"{x.Item1}-{x.Item2}"));
+                if (!seen.Contains(sublistKey))
+                {
+                    seen.Add(sublistKey);
+                    result.Add(sublist);
+                }
+            }
+
+            return result;
         }
 
         /// <summary>
@@ -5338,14 +5358,11 @@ namespace Microsoft.Automata
                         DoAlmostMatching(path);
                     }
 
-                    if (!paths.Any(p => p.SequenceEqual(path)))
-                    {
-                        paths.Add(path);
-                    }
+                    paths.Add(path);
                 }
 
                 edgePairPool.Remove(edgePair);
-                //Console.WriteLine("edge pair: " + edgePair.Item1 + ", " + edgePair.Item2 + ", " + edgePair.Item3);
+                Console.WriteLine("edge pair: " + edgePairPool.Count);
             }
 
             var allPaths = GetPathsAsStatePairs(paths);
