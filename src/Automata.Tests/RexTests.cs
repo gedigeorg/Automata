@@ -981,6 +981,8 @@ namespace Automata.Tests
             {
                 if (!Microsoft.Automata.Rex.RexEngine.IsMatch(s, regexes[0], RegexOptions.None))
                     Assert.IsTrue(false, "regex " + regexes[0] + " failed");
+                if (s.Length < 15 || s.Length > 16)
+                    Assert.IsTrue(false, "regex " + regexes[0] + " failed");
             }
         }
 
